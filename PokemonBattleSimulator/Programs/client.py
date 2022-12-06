@@ -1,7 +1,10 @@
 import socket
 
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.connect((socket.gethostname(), 9010))
+def client_connect(ip : str, port : int) :
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect((ip, port))
 
-msg = s.recv(1024)
-print(msg.decode("utf-8"))
+
+print(socket.gethostname())
+#msg = s.recv(1024)
+#print(msg.decode("utf-8"))
