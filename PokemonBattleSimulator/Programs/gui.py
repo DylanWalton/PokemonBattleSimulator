@@ -92,8 +92,9 @@ button_Quit.place(relx=.5, rely=.83, anchor=CENTER)
 shouldSavePresets = False
 savePresetsToggleValue = 0
 ip, port = "", 0
-with open("PokemonBattleSimulator\\presets.csv", "r") as file :
-    save_Presets = file.readlines() 
+with open("PokemonBattleSimulator\\presets.txt", "r") as file :
+    m_savePresets = file.readlines()
+print(m_savePresets)
 
 #region Commands(Functions)
 def set_username(username : customtkinter.CTkEntry) :
@@ -104,7 +105,7 @@ def set_username(username : customtkinter.CTkEntry) :
         username.configure(text="Limit Exceeded!", text_color="red")
 
 def set_PortIP() :
-    global ip, port
+    global ip, port, m_savePresets
 
     ip = entry_IP.get()
     port = entry_Port.get()
@@ -112,9 +113,13 @@ def set_PortIP() :
     if shouldSavePresets :
         #name = input("What name would you like to save this preset under ?")
         data = ["name", ip, port]
-        with open("PokemonBattleSimulator\\presets.csv", "a") as file :
-            writer = csv.writer(file)
-            writer.writerow(data)
+        with open("PokemonBattleSimulator\\presets.txt", "a") as file :
+            file.write("Name"+","+ip+","+port+"\n")
+            #writer.writerow(data)
+            with open("PokemonBattleSimulator\\presets.txt", "r") as file :
+                m_savePresets = file.readlines()
+            for i, ligne in enumerate(m_savePresets) :
+                m_savePresets[i] = m_savePresets[i][:-1].split(",")
 
 def save_Presets() :
     global savePresetsToggleValue, shouldSavePresets
@@ -183,7 +188,9 @@ radioButton_SavePresets = customtkinter.CTkRadioButton(master=m_masterSettingsTa
 radioButton_SavePresets.place(relx=.3, rely=.76, anchor=W)
 
 optionMenu_LoadPresets = customtkinter.CTkOptionMenu(master=m_masterSettingsTab,
-                                                     values=[])
+                                                     values=["None (New load preset)"]
+                                                     )
+optionMenu_LoadPresets.place(relx=.3, rely=.4, anchor=W)
 #endregion
 
 window.mainloop()
