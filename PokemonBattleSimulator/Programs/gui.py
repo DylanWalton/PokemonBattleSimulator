@@ -2,7 +2,7 @@ from tkinter import *
 import customtkinter
 from PIL import Image
 import client
-import csv
+from _ServerName import *
 
 customtkinter.set_appearance_mode("dark")
 customtkinter.set_default_color_theme("dark-blue")
@@ -21,7 +21,7 @@ tab_Settings = tabView.add("Settings")
 
 m_masterGameTab = tab_Game
 m_masterSettingsTab = tab_Settings
-
+                                                                            
 #region GameTab
 #region Images 
 background = customtkinter.CTkImage(light_image=Image.open("PokemonBattleSimulator\\Assets\\MainBackground.png"),
@@ -92,17 +92,32 @@ button_Quit.place(relx=.5, rely=.83, anchor=CENTER)
 shouldSavePresets = False
 savePresetsToggleValue = 0
 ip, port = "", 0
+username = ""
+with open("PokemonBattleSimulator\\username.txt", "r") as file :
+    username = file.read()
+
 with open("PokemonBattleSimulator\\presets.txt", "r") as file :
     m_savePresets = file.readlines()
-print(m_savePresets)
+for i, ligne in enumerate(m_savePresets) :
+    m_savePresets[i] = m_savePresets[i][:-1]
+for i, ligne in enumerate(m_savePresets) :
+    m_savePresets[i] = m_savePresets[i].split(",")
+displaySavePresets = []
+for i in range(len(m_savePresets)) :
+    displaySavePresets.append(m_savePresets[i][0])
 
 #region Commands(Functions)
-def set_username(username : customtkinter.CTkEntry) :
-    if len(username.get()) <= 20 :
-        #username.configure(text=username.get())
-        print(username.get())
+def set_username() :
+    global username
+
+    if len(entry_Username.get()) <= 20 :
+        username = entry_Username.get()
+        with open ("PokemonBattleSimulator\\username.txt", "w") as file :
+            file.write(username)
+        print(entry_Username.get())
     else :
-        username.configure(text="Limit Exceeded!", text_color="red")
+        entry_Username.delete(0, len(entry_Username.get()))
+        entry_Username.configure(placeholder_text="Limit Exceeded!", placeholder_text_color="red")
 
 def set_PortIP() :
     global ip, port, m_savePresets
@@ -110,16 +125,15 @@ def set_PortIP() :
     ip = entry_IP.get()
     port = entry_Port.get()
 
-    if shouldSavePresets :
+    if shouldSavePresets and (ip != "" and port != "") :
+        _ServerName.startDemandWindow()
         #name = input("What name would you like to save this preset under ?")
         data = ["name", ip, port]
         with open("PokemonBattleSimulator\\presets.txt", "a") as file :
             file.write("Name"+","+ip+","+port+"\n")
-            #writer.writerow(data)
-            with open("PokemonBattleSimulator\\presets.txt", "r") as file :
-                m_savePresets = file.readlines()
-            for i, ligne in enumerate(m_savePresets) :
-                m_savePresets[i] = m_savePresets[i][:-1].split(",")
+        m_savePresets.append(data)
+        displaySavePresets.append(data[0])
+        optionMenu_LoadPresets.configure(values=displaySavePresets)
 
 def save_Presets() :
     global savePresetsToggleValue, shouldSavePresets
@@ -133,6 +147,29 @@ def save_Presets() :
         savePresetsToggleValue = 1
         shouldSavePresets = True
     
+def activatePreset(value) :
+    global ip, port
+    
+    i = 0
+    while displaySavePresets[i] != value :
+        i+=1
+    if i != 0 :
+        entry_IP.delete(0, len(entry_IP.get()))
+        entry_Port.delete(0, len(entry_Port.get()))
+        entry_IP.insert(0, m_savePresets[i][1])
+        entry_Port.insert(0, m_savePresets[i][2])
+        entry_IP.configure(text_color="#42f58a")
+        entry_Port.configure(text_color="#42f58a")
+        ip, port = m_savePresets[i][1], m_savePresets[i][2]
+    else :
+        entry_IP.delete(0, len(entry_IP.get()))
+        entry_Port.delete(0, len(entry_Port.get()))
+        entry_IP.configure(placeholder_text="Enter the server IP address (i.e 127.0.0.1)", placeholder_text_color="grey")
+        entry_Port.configure(placeholder_text="Enter the server port to connect to (i.e 1234)", placeholder_text_color="grey")
+        ip, port = "", 0
+
+def set_ServerName(name : str) :
+    print(name)
 #endregion
 
 # Username Stuff
@@ -144,13 +181,15 @@ label_Username.place(relx=.1, rely=.05, anchor=W)
 entry_Username = customtkinter.CTkEntry(master=m_masterSettingsTab,
                                         placeholder_text="Enter your username, 20 characters at the maximum",
                                         width=330)
+if username != "" :
+    entry_Username.configure(placeholder_text=username)                                        
 entry_Username.place(relx=.1, rely=.13, anchor=W)
 button_Username = customtkinter.CTkButton(master=m_masterSettingsTab,
                                           text="Set username",
                                           width=50,
                                           height=30,
                                           font=(None, 14),
-                                          command=set_username(entry_Username))
+                                          command=set_username)
 button_Username.place(relx=.1, rely=.22, anchor=W)                
 
 # IP and Port Stuff
@@ -188,8 +227,8 @@ radioButton_SavePresets = customtkinter.CTkRadioButton(master=m_masterSettingsTa
 radioButton_SavePresets.place(relx=.3, rely=.76, anchor=W)
 
 optionMenu_LoadPresets = customtkinter.CTkOptionMenu(master=m_masterSettingsTab,
-                                                     values=["None (New load preset)"]
-                                                     )
+                                                     values=displaySavePresets,
+                                                     command=activatePreset)                                                     
 optionMenu_LoadPresets.place(relx=.3, rely=.4, anchor=W)
 #endregion
 
