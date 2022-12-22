@@ -2,7 +2,6 @@ from tkinter import *
 import customtkinter
 from PIL import Image
 import client
-from _ServerName import *
 
 customtkinter.set_appearance_mode("dark")
 customtkinter.set_default_color_theme("dark-blue")
@@ -10,7 +9,7 @@ customtkinter.set_default_color_theme("dark-blue")
 window = customtkinter.CTk()
 window.geometry("700x500")
 window.title("Pokemon Battle Simulator")
-icon = PhotoImage(file='PokemonBattleSimulator\\Assets\\icon3.png')
+icon = PhotoImage(file="..\\PokemonBattleSimulator\\Assets\\icon3.png")
 window.iconphoto(True, icon)
 window.resizable(False, False)
 
@@ -22,9 +21,9 @@ tab_Settings = tabView.add("Settings")
 m_masterGameTab = tab_Game
 m_masterSettingsTab = tab_Settings
                                                                             
-#region GameTab
+#region MainTab
 #region Images 
-background = customtkinter.CTkImage(light_image=Image.open("PokemonBattleSimulator\\Assets\\MainBackground.png"),
+background = customtkinter.CTkImage(light_image=Image.open("..\\PokemonBattleSimulator\\Assets\\MainBackground.png"),
                                     size=(450,170))
 bg = customtkinter.CTkButton(master=m_masterGameTab, 
                              text="",
@@ -38,6 +37,7 @@ bg.place(relx=.5, rely=.4, anchor=CENTER)
 
 #region Commands(Functions)
 def play() :
+    load()
     client.client_connect(str(ip), int(port))
 
 def settings() :
@@ -93,10 +93,10 @@ shouldSavePresets = False
 savePresetsToggleValue = 0
 ip, port = "", 0
 username = ""
-with open("PokemonBattleSimulator\\username.txt", "r") as file :
+with open("..\\PokemonBattleSimulator\\username.txt", "r") as file :
     username = file.read()
 
-with open("PokemonBattleSimulator\\presets.txt", "r") as file :
+with open("..\\PokemonBattleSimulator\\presets.txt", "r") as file :
     m_savePresets = file.readlines()
 for i, ligne in enumerate(m_savePresets) :
     m_savePresets[i] = m_savePresets[i][:-1]
@@ -112,7 +112,7 @@ def set_username() :
 
     if len(entry_Username.get()) <= 20 :
         username = entry_Username.get()
-        with open ("PokemonBattleSimulator\\username.txt", "w") as file :
+        with open ("..\\PokemonBattleSimulator\\username.txt", "w") as file :
             file.write(username)
         print(entry_Username.get())
     else :
@@ -126,11 +126,10 @@ def set_PortIP() :
     port = entry_Port.get()
 
     if shouldSavePresets and (ip != "" and port != "") :
-        _ServerName.startDemandWindow()
-        #name = input("What name would you like to save this preset under ?")
-        data = ["name", ip, port]
-        with open("PokemonBattleSimulator\\presets.txt", "a") as file :
-            file.write("Name"+","+ip+","+port+"\n")
+        m_name = entry_ServerName.get()
+        data = [m_name, ip, port]
+        with open("..\\PokemonBattleSimulator\\presets.txt", "a") as file :
+            file.write(m_name+","+ip+","+port+"\n")
         m_savePresets.append(data)
         displaySavePresets.append(data[0])
         optionMenu_LoadPresets.configure(values=displaySavePresets)
@@ -142,10 +141,12 @@ def save_Presets() :
         radioButton_SavePresets.deselect()
         savePresetsToggleValue = 0
         shouldSavePresets = False
+        entry_ServerName.place(relx=.1, rely=4, anchor=W)
     else : 
         radioButton_SavePresets.select()
         savePresetsToggleValue = 1
         shouldSavePresets = True
+        entry_ServerName.place(relx=.1, rely=.86, anchor=W)
     
 def activatePreset(value) :
     global ip, port
@@ -217,7 +218,9 @@ button_setPortIP = customtkinter.CTkButton(master=m_masterSettingsTab,
                                            font=(None, 14),
                                            command=set_PortIP)
 button_setPortIP.place(relx=.1, rely=.76, anchor=W)
-            
+entry_ServerName = customtkinter.CTkEntry(master=m_masterSettingsTab,
+                                          placeholder_text="Server Name",
+                                          width=240)
 # Save Presets Stuff
 radioButton_SavePresets = customtkinter.CTkRadioButton(master=m_masterSettingsTab,
                                                        text="Save Presets",
@@ -230,6 +233,26 @@ optionMenu_LoadPresets = customtkinter.CTkOptionMenu(master=m_masterSettingsTab,
                                                      values=displaySavePresets,
                                                      command=activatePreset)                                                     
 optionMenu_LoadPresets.place(relx=.3, rely=.4, anchor=W)
+#endregion
+
+#region LoadingFrame
+def load() :
+    tabView.place(relx=10)
+    frame_LoadingFrame = customtkinter.CTkFrame(master=window,
+                                            width=window._current_width-20, 
+                                            height=window._current_height-20)
+    frame_LoadingFrame.place(relx=.5, rely=.5, anchor=CENTER)   
+
+    label_Loading = customtkinter.CTkLabel(master=frame_LoadingFrame,
+                                           text="Loading",
+                                           text_color="white",
+                                           font=(None, 31))
+    label_Loading.place(relx=.5, rely=.4, anchor=CENTER)                                       
+    progressBar_LoadingBar = customtkinter.CTkProgressBar(master=frame_LoadingFrame,
+                                                          width=300,
+                                                          height=15,
+                                                          progress_color="red")
+    progressBar_LoadingBar.place(relx=.5, rely=.5, anchor=CENTER)                                                                              
 #endregion
 
 window.mainloop()
