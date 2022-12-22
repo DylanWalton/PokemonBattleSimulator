@@ -5,6 +5,6 @@ def client_connect(ip : str, port : int) :
     s.connect((ip, port))
 
 
-print(socket.gethostname())
+#print(socket.gethostname())
 #msg = s.recv(1024)
 #print(msg.decode("utf-8"))
