@@ -1,8 +1,8 @@
 from tkinter import *
 import customtkinter
 from PIL import Image
-import client
-from time import sleep
+import socket
+import timerCountdown
 
 customtkinter.set_appearance_mode("dark")
 customtkinter.set_default_color_theme("dark-blue")
@@ -38,22 +38,21 @@ bg.place(relx=.5, rely=.4, anchor=CENTER)
 
 #region Commands(Functions)
 def play() :
-    load()
-
-    if port == None or ip == "" :
-        loadFailed()
-        errorPopUp("Double check the IP and Port")
+    #load()
 
     try :
-        client.client_connect(str(ip), int(port))
+        client_connect(str(ip), int(port))
+    except ValueError as v :
+        errorPopUp("Double check the IP and Port")
+        #loadFailed()
     except ConnectionRefusedError as c :
         if c.winerror != 1 :
-            loadFailed()
             errorPopUp("The attempted server is likely down")
+            #loadFailed()
     except OSError as e:
         if e.winerror != 1 :
-            loadFailed()
             errorPopUp("Double check the IP and Port")
+            #loadFailed()
 
 def settings() :
     tabView.set("Settings")
@@ -251,32 +250,32 @@ optionMenu_LoadPresets.place(relx=.3, rely=.4, anchor=W)
 #endregion
 
 #region LoadingFrame
-frame_LoadingFrame = customtkinter.CTkFrame(master=window,
-                                            width=window._current_width-20, 
-                                            height=window._current_height-20)
-progressBar_LoadingBar = customtkinter.CTkProgressBar(master=frame_LoadingFrame,
-                                                        width=300,
-                                                        height=15,
-                                                        progress_color="yellow",
-                                                        mode="indeterminate",
-                                                        indeterminate_speed=1)
+#frame_LoadingFrame = customtkinter.CTkFrame(master=window,
+#                                            width=window._current_width-20, 
+#                                            height=window._current_height-20)
+#progressBar_LoadingBar = customtkinter.CTkProgressBar(master=frame_LoadingFrame,
+#                                                        width=300,
+#                                                        height=15,
+#                                                        progress_color="yellow",
+#                                                        mode="indeterminate",
+#                                                        indeterminate_speed=1)
 
-def load() :
-    tabView.place(relx=10)
-    frame_LoadingFrame.place(relx=.5, rely=.5, anchor=CENTER)   
+#def load() :
+#    tabView.place(relx=10)
+#    frame_LoadingFrame.place(relx=.5, rely=.5, anchor=CENTER)   
+#
+#    label_Loading = customtkinter.CTkLabel(master=frame_LoadingFrame,
+#                                        text="Loading",
+#                                        text_color="white",
+#                                        font=(None, 31))
+#    label_Loading.place(relx=.5, rely=.4, anchor=CENTER)
+#    progressBar_LoadingBar.place(relx=.5, rely=.5, anchor=CENTER)
+#    progressBar_LoadingBar.start()
 
-    label_Loading = customtkinter.CTkLabel(master=frame_LoadingFrame,
-                                        text="Loading",
-                                        text_color="white",
-                                        font=(None, 31))
-    label_Loading.place(relx=.5, rely=.4, anchor=CENTER)
-    progressBar_LoadingBar.place(relx=.5, rely=.5, anchor=CENTER)
-    progressBar_LoadingBar.start()
-
-def loadFailed() :
-    tabView.place(relx=.5, rely=.488, anchor=CENTER)
-    frame_LoadingFrame.place(relx=20)
-    progressBar_LoadingBar.stop()
+#def loadFailed() :
+#    tabView.place(relx=.5, rely=.488, anchor=CENTER)
+#    frame_LoadingFrame.place(relx=20)
+#    progressBar_LoadingBar.stop()
 #endregion
 
 #region Error Notifier
@@ -308,5 +307,73 @@ def errorPopUp(error : str) :
         label_ErrorNotifier.place(relx=.2, rely=.99, anchor=S)
         button_IgnoreError.place(relx=.415, rely=.99, anchor=S)
 #endregion
+
+#region Server
+def connectedSuccessfully(server) :
+    server.send(bytes(username, "utf-8"))
+    lobby()
+    
+#endregion
+
+#region Client
+def client_connect(ip : str, port : int) :
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect((ip, port))
+    msg = s.recv(1024)
+
+    if msg is not None :
+        print(msg)
+        connectedSuccessfully(s)
+    
+#endregion
+
+#region Lobby
+frame_LobbyFrame = customtkinter.CTkFrame(master=window,
+                                              width=window._current_width-20, 
+                                              height=window._current_height-20)
+
+def lobby() :
+    tabView.place(relx=10)
+    frame_LobbyFrame.place(relx=.5, rely=.5, anchor=CENTER)
+
+    label_ServerTitle = customtkinter.CTkLabel(master=frame_LobbyFrame,
+                                               text=optionMenu_LoadPresets.get(),
+                                               font=(None, 27),
+                                               text_color="#229fe7")
+    label_ServerTitle.place(relx=.42, rely=0.05, anchor=CENTER)
+
+    label_Players = customtkinter.CTkLabel(master=frame_LobbyFrame, text="Players", font=(None, 20))
+    label_Players.place(relx=.59, rely=.126, anchor=W)
+    frame_Players = customtkinter.CTkFrame(master=frame_LobbyFrame, width=280, height=370, fg_color="#1A1A1A", border_color="black", border_width=1)
+    frame_Players.place(relx=.436, rely=.54, anchor=W)
+    button_Battle = customtkinter.CTkButton(master=frame_LobbyFrame, text="Battle", font=(None, 18), fg_color="green", width=97, height=32, text_color="white")
+    button_Battle.place(relx=.854, rely=.19, anchor=W)
+    button_Back = customtkinter.CTkButton(master=frame_LobbyFrame, text="Back", font=(None, 18), fg_color="#ef9c06", width=97, height=32, text_color="white", command=backToMain)
+    button_Back.place(relx=.854, rely=.27, anchor=W)
+    button_QuitLobby = customtkinter.CTkButton(master=frame_LobbyFrame, text="Quit", font=(None, 18), fg_color="#af0400", width=97, height=32, text_color="white", command=quit)
+    button_QuitLobby.place(relx=.854, rely=.35, anchor=W)
+
+
+    entry_Chat = customtkinter.CTkEntry(master=frame_LobbyFrame, placeholder_text="Message everyone", width=593, height=30)
+    entry_Chat.place(relx=0, rely=.97, anchor=W)
+    image_SendArrow = customtkinter.CTkImage(light_image=Image.open("..\\PokemonBattleSimulator\\Assets\\SendArrow2.png"),
+                                    size=(34,23))
+    button_SendChat = customtkinter.CTkButton(master=frame_LobbyFrame, fg_color="#229fe7", image=image_SendArrow, width=85, height=30, text="")
+    button_SendChat.place(relx=.875, rely=.97, anchor=W)
+
+    label_Chat = customtkinter.CTkLabel(master=frame_LobbyFrame, text="Chat", font=(None, 20))
+    label_Chat.place(relx=.18, rely=.126, anchor=W)
+    textbox_Chat = customtkinter.CTkTextbox(master=frame_LobbyFrame, width=290, height=370, border_color="black", border_width=1)
+    textbox_Chat.place(relx=0, rely=.54, anchor=W)
+
+    #frame_LoadingFrame.place(relx=20)
+    #progressBar_LoadingBar.stop()
+
+
+#endregion
+
+def backToMain() :
+    frame_LobbyFrame.place(relx=10)
+    tabView.place(relx=.5, rely=.488, anchor=CENTER)
 
 window.mainloop()
