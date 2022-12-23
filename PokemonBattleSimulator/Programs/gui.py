@@ -2,6 +2,7 @@ from tkinter import *
 import customtkinter
 from PIL import Image
 import client
+from time import sleep
 
 customtkinter.set_appearance_mode("dark")
 customtkinter.set_default_color_theme("dark-blue")
@@ -38,7 +39,20 @@ bg.place(relx=.5, rely=.4, anchor=CENTER)
 #region Commands(Functions)
 def play() :
     load()
-    client.client_connect(str(ip), int(port))
+
+    if port == None or ip == None :
+        return
+
+    try :
+        client.client_connect(str(ip), int(port))
+    except ConnectionRefusedError as c :
+        if c.winerror != 1 :
+            loadFailed()
+            errorPopUp("The attempted server is likely down")
+    except OSError as e:
+        if e.winerror != 1 :
+            loadFailed()
+            errorPopUp("Double check the IP and Port")
 
 def settings() :
     tabView.set("Settings")
@@ -124,6 +138,8 @@ def set_PortIP() :
 
     ip = entry_IP.get()
     port = entry_Port.get()
+
+    print(ip, port)
 
     if shouldSavePresets and (ip != "" and port != "") :
         m_name = entry_ServerName.get()
@@ -236,23 +252,61 @@ optionMenu_LoadPresets.place(relx=.3, rely=.4, anchor=W)
 #endregion
 
 #region LoadingFrame
-def load() :
-    tabView.place(relx=10)
-    frame_LoadingFrame = customtkinter.CTkFrame(master=window,
+frame_LoadingFrame = customtkinter.CTkFrame(master=window,
                                             width=window._current_width-20, 
                                             height=window._current_height-20)
+progressBar_LoadingBar = customtkinter.CTkProgressBar(master=frame_LoadingFrame,
+                                                        width=300,
+                                                        height=15,
+                                                        progress_color="yellow",
+                                                        mode="indeterminate",
+                                                        indeterminate_speed=1)
+
+def load() :
+    tabView.place(relx=10)
     frame_LoadingFrame.place(relx=.5, rely=.5, anchor=CENTER)   
 
     label_Loading = customtkinter.CTkLabel(master=frame_LoadingFrame,
-                                           text="Loading",
-                                           text_color="white",
-                                           font=(None, 31))
-    label_Loading.place(relx=.5, rely=.4, anchor=CENTER)                                       
-    progressBar_LoadingBar = customtkinter.CTkProgressBar(master=frame_LoadingFrame,
-                                                          width=300,
-                                                          height=15,
-                                                          progress_color="red")
-    progressBar_LoadingBar.place(relx=.5, rely=.5, anchor=CENTER)                                                                              
+                                        text="Loading",
+                                        text_color="white",
+                                        font=(None, 31))
+    label_Loading.place(relx=.5, rely=.4, anchor=CENTER)
+    progressBar_LoadingBar.place(relx=.5, rely=.5, anchor=CENTER)
+    progressBar_LoadingBar.start()
+
+def loadFailed() :
+    tabView.place(relx=.5, rely=.488, anchor=CENTER)
+    frame_LoadingFrame.place(relx=20)
+    progressBar_LoadingBar.stop()
+#endregion
+
+#region Error Notifier
+label_ErrorNotifier = customtkinter.CTkLabel(master=window,
+                                             text_color="red",
+                                             font=(None, 17))
+
+image_IgnoreError = customtkinter.CTkImage(light_image=Image.open("..\\PokemonBattleSimulator\\Assets\\YellowDot.png"),
+                                    size=(20,20))
+
+def ignorePopUp() :
+    label_ErrorNotifier.place(relx=.17, rely=5, anchor=S)
+    button_IgnoreError.place(relx=.353, rely=5, anchor=S)
+
+button_IgnoreError = customtkinter.CTkButton(master=window,
+                                             image=image_IgnoreError,
+                                             width=28,
+                                             height=28,
+                                             command=ignorePopUp,
+                                             text="",
+                                             fg_color="#1A1A1A")
+
+def errorPopUp(error : str) :
+    label_ErrorNotifier.configure(text=error)
+    label_ErrorNotifier.place(relx=.17, rely=.99, anchor=S)
+    if len(error) < 31 :
+        button_IgnoreError.place(relx=.353, rely=.99, anchor=S)
+    else :
+        button_IgnoreError.place(relx=.388, rely=.99, anchor=S)
 #endregion
 
 window.mainloop()
