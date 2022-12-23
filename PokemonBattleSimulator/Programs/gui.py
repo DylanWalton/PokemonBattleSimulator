@@ -40,8 +40,9 @@ bg.place(relx=.5, rely=.4, anchor=CENTER)
 def play() :
     load()
 
-    if port == None or ip == None :
-        return
+    if port == None or ip == "" :
+        loadFailed()
+        errorPopUp("Double check the IP and Port")
 
     try :
         client.client_connect(str(ip), int(port))
@@ -138,8 +139,6 @@ def set_PortIP() :
 
     ip = entry_IP.get()
     port = entry_Port.get()
-
-    print(ip, port)
 
     if shouldSavePresets and (ip != "" and port != "") :
         m_name = entry_ServerName.get()
@@ -302,11 +301,12 @@ button_IgnoreError = customtkinter.CTkButton(master=window,
 
 def errorPopUp(error : str) :
     label_ErrorNotifier.configure(text=error)
-    label_ErrorNotifier.place(relx=.17, rely=.99, anchor=S)
     if len(error) < 31 :
+        label_ErrorNotifier.place(relx=.17, rely=.99, anchor=S)
         button_IgnoreError.place(relx=.353, rely=.99, anchor=S)
     else :
-        button_IgnoreError.place(relx=.388, rely=.99, anchor=S)
+        label_ErrorNotifier.place(relx=.2, rely=.99, anchor=S)
+        button_IgnoreError.place(relx=.415, rely=.99, anchor=S)
 #endregion
 
 window.mainloop()
