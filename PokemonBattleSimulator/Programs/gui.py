@@ -2,7 +2,9 @@ from tkinter import *
 import customtkinter
 from PIL import Image
 import socket
-import timerCountdown
+import threading
+import sys
+from random import randint
 
 customtkinter.set_appearance_mode("dark")
 customtkinter.set_default_color_theme("dark-blue")
@@ -42,6 +44,7 @@ def play() :
 
     try :
         client_connect(str(ip), int(port))
+        receive_Process.start()
     except ValueError as v :
         errorPopUp("Double check the IP and Port")
         #loadFailed()
@@ -58,7 +61,7 @@ def settings() :
     tabView.set("Settings")
 
 def quit() :
-    exit()
+    sys.exit()
 #endregion
 
 #region Labels
@@ -308,22 +311,49 @@ def errorPopUp(error : str) :
         button_IgnoreError.place(relx=.415, rely=.99, anchor=S)
 #endregion
 
-#region Server
-def connectedSuccessfully(server) :
-    server.send(bytes(username, "utf-8"))
-    lobby()
-    
-#endregion
-
 #region Client
-def client_connect(ip : str, port : int) :
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect((ip, port))
-    msg = s.recv(1024)
+client = None
+connected = False
+FORMAT = "utf-8"
+players = []
 
-    if msg is not None :
-        print(msg)
-        connectedSuccessfully(s)
+def client_connect(ip : str, port : int) :
+    global client
+    
+    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client.connect((ip, port))
+    lobby()
+
+
+def client_receive() :
+    while True :
+        try :
+            message = client.recv(1024).decode(FORMAT)
+            if message == "alias?" :
+                client.send(username.encode(FORMAT))
+            elif "!players:" in message :
+                global players
+                client.send(" ".encode(FORMAT))
+                message = message[10:-1]
+                message = message.split(",")
+                players = message
+                print(players)
+                displayPlayers()
+            else :
+                print(message)
+                textbox_Chat.insert("0.0", message+"\n\n")
+        except :
+            print("Error!")
+            client.close()
+            break
+
+def client_send() :
+    if entry_Chat.get() != "" :
+        message = f"{username}  >>  {entry_Chat.get()}"
+        client.send(message.encode(FORMAT))
+        entry_Chat.delete(0, len(entry_Chat.get()))
+
+
     
 #endregion
 
@@ -331,6 +361,11 @@ def client_connect(ip : str, port : int) :
 frame_LobbyFrame = customtkinter.CTkFrame(master=window,
                                               width=window._current_width-20, 
                                               height=window._current_height-20)
+entry_Chat = customtkinter.CTkEntry(master=frame_LobbyFrame, placeholder_text="Message everyone", width=593, height=30)
+colours = ["red", "blue", "green", "yellow", "orange", "pink", "white", "purple"]
+#colours[randint(0, len(colours)-1)]
+textbox_Chat = customtkinter.CTkTextbox(master=frame_LobbyFrame, width=290, height=370, border_color="black", border_width=1, text_color="orange")
+frame_Players = customtkinter.CTkFrame(master=frame_LobbyFrame, width=280, height=370, fg_color="#1A1A1A", border_color="black", border_width=1)
 
 def lobby() :
     tabView.place(relx=10)
@@ -344,7 +379,6 @@ def lobby() :
 
     label_Players = customtkinter.CTkLabel(master=frame_LobbyFrame, text="Players", font=(None, 20))
     label_Players.place(relx=.59, rely=.126, anchor=W)
-    frame_Players = customtkinter.CTkFrame(master=frame_LobbyFrame, width=280, height=370, fg_color="#1A1A1A", border_color="black", border_width=1)
     frame_Players.place(relx=.436, rely=.54, anchor=W)
     button_Battle = customtkinter.CTkButton(master=frame_LobbyFrame, text="Battle", font=(None, 18), fg_color="green", width=97, height=32, text_color="white")
     button_Battle.place(relx=.854, rely=.19, anchor=W)
@@ -353,27 +387,50 @@ def lobby() :
     button_QuitLobby = customtkinter.CTkButton(master=frame_LobbyFrame, text="Quit", font=(None, 18), fg_color="#af0400", width=97, height=32, text_color="white", command=quit)
     button_QuitLobby.place(relx=.854, rely=.35, anchor=W)
 
-
-    entry_Chat = customtkinter.CTkEntry(master=frame_LobbyFrame, placeholder_text="Message everyone", width=593, height=30)
     entry_Chat.place(relx=0, rely=.97, anchor=W)
     image_SendArrow = customtkinter.CTkImage(light_image=Image.open("..\\PokemonBattleSimulator\\Assets\\SendArrow2.png"),
                                     size=(34,23))
-    button_SendChat = customtkinter.CTkButton(master=frame_LobbyFrame, fg_color="#229fe7", image=image_SendArrow, width=85, height=30, text="")
+    button_SendChat = customtkinter.CTkButton(master=frame_LobbyFrame, fg_color="#229fe7", image=image_SendArrow, width=85, height=30, text="", command=client_send)
     button_SendChat.place(relx=.875, rely=.97, anchor=W)
 
     label_Chat = customtkinter.CTkLabel(master=frame_LobbyFrame, text="Chat", font=(None, 20))
     label_Chat.place(relx=.18, rely=.126, anchor=W)
-    textbox_Chat = customtkinter.CTkTextbox(master=frame_LobbyFrame, width=290, height=370, border_color="black", border_width=1)
     textbox_Chat.place(relx=0, rely=.54, anchor=W)
 
-    #frame_LoadingFrame.place(relx=20)
-    #progressBar_LoadingBar.stop()
+playerButtons = []
+#playerButtons[i].cget("text")
+
+def displayPlayers() :
+    #global players 
+    i = 0
+    n = .035
+    distanceBetweenButtons = .07
+    players = ["Josh","Bo","Tony","Al","Ebenezer"]
+    for player in players :
+        playerButtons.append(None)
+        playerButtons[i] = customtkinter.CTkButton(master=frame_Players, text=player, width=277, height=25, font=(None, 17))
+        playerButtons[i].configure(command=playerChosen("Hello"))
+        playerButtons[i].place(relx=.5, rely=n, anchor=CENTER)
+        i += 1
+        n += distanceBetweenButtons
+
+def playerChosen(name : str) :
+    print(name)
+
+def backToMain() :
+    global client
+    client.close()
+    frame_LobbyFrame.place(relx=10)
+    tabView.place(relx=.5, rely=.488, anchor=CENTER)
+
 
 
 #endregion
 
-def backToMain() :
-    frame_LobbyFrame.place(relx=10)
-    tabView.place(relx=.5, rely=.488, anchor=CENTER)
+
+#region Threads
+receive_Process = threading.Thread(target=client_receive)
+receive_Process.daemon = True
+#endregion
 
 window.mainloop()
