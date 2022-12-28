@@ -324,7 +324,6 @@ def client_connect(ip : str, port : int) :
     client.connect((ip, port))
     lobby()
 
-
 def client_receive() :
     while True :
         try :
@@ -334,11 +333,17 @@ def client_receive() :
             elif "!players:" in message :
                 global players
                 client.send(" ".encode(FORMAT))
-                message = message[10:-1]
+                message = message.replace("!players:", "")
+                message = message.replace("[", "")
+                message = message.replace("]", "")
+                message = message.replace("b'", "")
+                message = message[:-1]
                 message = message.split(",")
                 players = message
-                print(players)
                 displayPlayers()
+            elif "!invite:" in message :
+                message = message.replace("!invite:", "")
+                print(message)
             else :
                 print(message)
                 textbox_Chat.insert("0.0", message+"\n\n")
@@ -352,9 +357,6 @@ def client_send() :
         message = f"{username}  >>  {entry_Chat.get()}"
         client.send(message.encode(FORMAT))
         entry_Chat.delete(0, len(entry_Chat.get()))
-
-
-    
 #endregion
 
 #region Lobby
@@ -365,7 +367,7 @@ entry_Chat = customtkinter.CTkEntry(master=frame_LobbyFrame, placeholder_text="M
 colours = ["red", "blue", "green", "yellow", "orange", "pink", "white", "purple"]
 #colours[randint(0, len(colours)-1)]
 textbox_Chat = customtkinter.CTkTextbox(master=frame_LobbyFrame, width=290, height=370, border_color="black", border_width=1, text_color="orange")
-frame_Players = customtkinter.CTkFrame(master=frame_LobbyFrame, width=280, height=370, fg_color="#1A1A1A", border_color="black", border_width=1)
+frame_Players = customtkinter.CTkFrame(master=frame_LobbyFrame, width=210, height=370, fg_color="#1A1A1A", border_color="black", border_width=1)
 
 def lobby() :
     tabView.place(relx=10)
@@ -378,14 +380,14 @@ def lobby() :
     label_ServerTitle.place(relx=.42, rely=0.05, anchor=CENTER)
 
     label_Players = customtkinter.CTkLabel(master=frame_LobbyFrame, text="Players", font=(None, 20))
-    label_Players.place(relx=.59, rely=.126, anchor=W)
+    label_Players.place(relx=.545, rely=.126, anchor=W)
     frame_Players.place(relx=.436, rely=.54, anchor=W)
-    button_Battle = customtkinter.CTkButton(master=frame_LobbyFrame, text="Battle", font=(None, 18), fg_color="green", width=97, height=32, text_color="white")
-    button_Battle.place(relx=.854, rely=.19, anchor=W)
-    button_Back = customtkinter.CTkButton(master=frame_LobbyFrame, text="Back", font=(None, 18), fg_color="#ef9c06", width=97, height=32, text_color="white", command=backToMain)
-    button_Back.place(relx=.854, rely=.27, anchor=W)
-    button_QuitLobby = customtkinter.CTkButton(master=frame_LobbyFrame, text="Quit", font=(None, 18), fg_color="#af0400", width=97, height=32, text_color="white", command=quit)
-    button_QuitLobby.place(relx=.854, rely=.35, anchor=W)
+    button_Battle = customtkinter.CTkButton(master=frame_LobbyFrame, text="Battle", font=(None, 18), fg_color="green", width=160, height=30, text_color="white", command=requestBattle)
+    button_Battle.place(relx=.873, rely=.27, anchor=CENTER)
+    button_Back = customtkinter.CTkButton(master=frame_LobbyFrame, text="Back", font=(None, 18), fg_color="#ef9c06", width=160, height=30, text_color="white", command=backToMain)
+    button_Back.place(relx=.873, rely=.34, anchor=CENTER)
+    button_QuitLobby = customtkinter.CTkButton(master=frame_LobbyFrame, text="Quit", font=(None, 18), fg_color="#af0400", width=160, height=30, text_color="white", command=quit)
+    button_QuitLobby.place(relx=.873, rely=.41, anchor=CENTER)
 
     entry_Chat.place(relx=0, rely=.97, anchor=W)
     image_SendArrow = customtkinter.CTkImage(light_image=Image.open("..\\PokemonBattleSimulator\\Assets\\SendArrow2.png"),
@@ -398,33 +400,47 @@ def lobby() :
     textbox_Chat.place(relx=0, rely=.54, anchor=W)
 
 playerButtons = []
-#playerButtons[i].cget("text")
+chosenPlayer = None
 
 def displayPlayers() :
-    #global players 
+    global players 
+    players.pop(0)
+    values = ["Players"]
+    #players = ["Josh","Bo","Tony","Al","Ebenezer"]
+
     i = 0
-    n = .035
+    n = .04
     distanceBetweenButtons = .07
-    players = ["Josh","Bo","Tony","Al","Ebenezer"]
     for player in players :
+        player = player.replace(" ", "")
+        player = player.replace("'", "")
+        values.append(player)
         playerButtons.append(None)
-        playerButtons[i] = customtkinter.CTkButton(master=frame_Players, text=player, width=277, height=25, font=(None, 17))
-        playerButtons[i].configure(command=playerChosen("Hello"))
+        playerButtons[i] = customtkinter.CTkLabel(master=frame_Players, text=player, width=180, height=25, font=(None, 17))
+        #, corner_radius=0, fg_color="#121212"
+        #playerButtons[i].configure(command=print(playerButtons[i].cget("text")))
         playerButtons[i].place(relx=.5, rely=n, anchor=CENTER)
         i += 1
         n += distanceBetweenButtons
 
-def playerChosen(name : str) :
-    print(name)
+    optionMenu_Players = customtkinter.CTkOptionMenu(master=frame_LobbyFrame, values=values, command=playerChosen, width=160)
+    optionMenu_Players.place(relx=.873, rely=.19, anchor=CENTER) 
+
+def playerChosen(text) :
+    global chosenPlayer
+    chosenPlayer = text
+    print(text)
+
+def requestBattle() :
+    # send invite to chosen player
+    client.send(f"!invite:{chosenPlayer}".encode(FORMAT))
+    pass
 
 def backToMain() :
     global client
     client.close()
     frame_LobbyFrame.place(relx=10)
     tabView.place(relx=.5, rely=.488, anchor=CENTER)
-
-
-
 #endregion
 
 
