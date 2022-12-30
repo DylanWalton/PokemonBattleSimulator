@@ -1,0 +1,6 @@
+Pikachu,45,80,50,1
+Charizard,78,84,78,1
+Lucario,70,110,70,1
+Mewtwo,106,110,90,1
+Suicune,100,75,115,1
+Rayquaza,105,150,90,1
