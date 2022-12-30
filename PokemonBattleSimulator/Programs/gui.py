@@ -11,10 +11,15 @@ import c_dresseur
 customtkinter.set_appearance_mode("dark")
 customtkinter.set_default_color_theme("dark-blue")
 
+assetsLoc = "..\\PokemonBattleSimulator\\Assets\\"
+dataLoc = "..\\PokemonBattleSimulator\\Data\\"
+pokImagesLoc = "..\\PokemonBattleSimulator\\PokemonData\\Images\\"
+pokMetaLoc = "..\\PokemonBattleSimulator\\PokemonData\\Meta\\"
+
 window = customtkinter.CTk()
 window.geometry("700x500")
 window.title("Pokemon Battle Simulator")
-icon = PhotoImage(file="..\\PokemonBattleSimulator\\Assets\\icon3.png")
+icon = PhotoImage(file=f"{assetsLoc}icon3.png")
 window.iconphoto(True, icon)
 window.resizable(False, False)
 
@@ -28,7 +33,7 @@ m_masterSettingsTab = tab_Settings
                                                                             
 #region MainTab
 #region Images 
-background = customtkinter.CTkImage(light_image=Image.open("..\\PokemonBattleSimulator\\Assets\\MainBackground.png"),
+background = customtkinter.CTkImage(light_image=Image.open(f"{assetsLoc}MainBackground.png"),
                                     size=(450,170))
 bg = customtkinter.CTkButton(master=m_masterGameTab, 
                              text="",
@@ -112,10 +117,10 @@ shouldSavePresets = False
 savePresetsToggleValue = 0
 ip, port = "", 0
 username = ""
-with open("..\\PokemonBattleSimulator\\username.txt", "r") as file :
+with open(f"{dataLoc}username.txt", "r") as file :
     username = file.read()
 
-with open("..\\PokemonBattleSimulator\\presets.txt", "r") as file :
+with open(f"{dataLoc}presets.txt", "r") as file :
     m_savePresets = file.readlines()
 for i, ligne in enumerate(m_savePresets) :
     m_savePresets[i] = m_savePresets[i][:-1]
@@ -131,7 +136,7 @@ def set_username() :
 
     if len(entry_Username.get()) <= 20 :
         username = entry_Username.get()
-        with open ("..\\PokemonBattleSimulator\\username.txt", "w") as file :
+        with open (f"{dataLoc}username.txt", "w") as file :
             file.write(username)
         print(entry_Username.get())
     else :
@@ -147,7 +152,7 @@ def set_PortIP() :
     if shouldSavePresets and (ip != "" and port != "") :
         m_name = entry_ServerName.get()
         data = [m_name, ip, port]
-        with open("..\\PokemonBattleSimulator\\presets.txt", "a") as file :
+        with open(f"{dataLoc}presets.txt", "a") as file :
             file.write(m_name+","+ip+","+port+"\n")
         m_savePresets.append(data)
         displaySavePresets.append(data[0])
@@ -288,7 +293,7 @@ label_ErrorNotifier = customtkinter.CTkLabel(master=window,
                                              text_color="red",
                                              font=(None, 17))
 
-image_IgnoreError = customtkinter.CTkImage(light_image=Image.open("..\\PokemonBattleSimulator\\Assets\\YellowDot.png"),
+image_IgnoreError = customtkinter.CTkImage(light_image=Image.open(f"{assetsLoc}YellowDot.png"),
                                     size=(20,20))
 
 def ignorePopUp() :
@@ -342,6 +347,13 @@ def client_receive() :
                 message = message[:-1]
                 message = message.split(",")
                 players = message
+                players.pop(0)
+                i = 0
+                for player in players :
+                    player = player.replace(" ", "")
+                    player = player.replace("'", "")
+                    players[i] = player
+                    i += 0
                 displayPlayers()
             elif "!invite:" in message :
                 message = message.replace("!invite:", "")
@@ -355,6 +367,16 @@ def client_receive() :
                 print(message)
                 if message == username :
                     battle()
+            elif "!left:" in message :
+                 message = message.replace("!left:", "")
+                 message = message.replace("b'", "")
+                 message = message[:-1]
+                 print(message)
+                 print(players)
+                 global poppedPlayer
+                 poppedPlayer = players.index(message)
+                 players.remove(message)
+                 displayPlayers()
             else :
                 print(message)
                 textbox_Chat.insert("0.0", message+"\n\n")
@@ -401,7 +423,7 @@ def lobby() :
     button_QuitLobby.place(relx=.873, rely=.41, anchor=CENTER)
 
     entry_Chat.place(relx=0, rely=.97, anchor=W)
-    image_SendArrow = customtkinter.CTkImage(light_image=Image.open("..\\PokemonBattleSimulator\\Assets\\SendArrow2.png"),
+    image_SendArrow = customtkinter.CTkImage(light_image=Image.open(f"{assetsLoc}SendArrow2.png"),
                                     size=(34,23))
     button_SendChat = customtkinter.CTkButton(master=frame_LobbyFrame, fg_color="#229fe7", image=image_SendArrow, width=85, height=30, text="", command=client_send)
     button_SendChat.place(relx=.875, rely=.97, anchor=W)
@@ -413,30 +435,36 @@ def lobby() :
 playerButtons = []
 chosenPlayer = None
 optionMenu_Players = None
+poppedPlayer = 0
 
 def displayPlayers() :
     global players, optionMenu_Players
-    players.pop(0)
+    #players.pop(0)
+    print(players)
     values = ["Players"]
     #players = ["Josh","Bo","Tony","Al","Ebenezer"]
 
     i = 0
     n = .04
     distanceBetweenButtons = .07
+
+    if players == [] and playerButtons != []:
+        playerButtons[poppedPlayer].destroy()
+
     for player in players :
-        player = player.replace(" ", "")
-        player = player.replace("'", "")
+        #player = player.replace(" ", "")
+        #player = player.replace("'", "")
         values.append(player)
         playerButtons.append(None)
         playerButtons[i] = customtkinter.CTkLabel(master=frame_Players, text=player, width=180, height=25, font=(None, 17))
         #, corner_radius=0, fg_color="#121212"
-        #playerButtons[i].configure(command=print(playerButtons[i].cget("text")))
         playerButtons[i].place(relx=.5, rely=n, anchor=CENTER)
         i += 1
         n += distanceBetweenButtons
+    print(players)
 
     optionMenu_Players = customtkinter.CTkOptionMenu(master=frame_LobbyFrame, values=values, command=playerChosen, width=160)
-    optionMenu_Players.place(relx=.873, rely=.19, anchor=CENTER) 
+    optionMenu_Players.place(relx=.873, rely=.19, anchor=CENTER)
 
 def playerChosen(text) :
     global chosenPlayer
@@ -473,7 +501,7 @@ def recvInvite(inviter : str) :
 #region Battle
 
 #region Pokemon
-with open("..\\PokemonBattleSimulator\\PokemonData\\Meta\\pokemonMetaData.txt", "r") as file :
+with open(f"{pokMetaLoc}pokemonMetaData.txt", "r") as file :
     pokemon = file.readlines()
 for i in range(len(pokemon)) :
     pokemon[i] = pokemon[i].replace("\n", "")
@@ -490,7 +518,7 @@ rayquaza = c_pokemon.Pokemon(pokemon[5][0], int(pokemon[5][1]), int(pokemon[5][2
 
 frame_PokemonChoice = customtkinter.CTkFrame(master=window, width=window._current_width-20, height=window._current_height-20)
 
-image_Pikachu = customtkinter.CTkImage(light_image=Image.open("..\\PokemonBattleSimulator\\PokemonData\\Images\\Pikachu.png"), size=(270,250))
+image_Pikachu = customtkinter.CTkImage(light_image=Image.open(f"{pokImagesLoc}Pikachu.png"), size=(270,250))
 button_PokemonImage1 = customtkinter.CTkButton(master=frame_PokemonChoice, text="", image=image_Pikachu, width=430, height=400, fg_color="#222222", hover=False)
 label_Name = customtkinter.CTkLabel(master=frame_PokemonChoice, text=pikachu.get_nom(), font=(None, 25))
 label_Pv = customtkinter.CTkLabel(master=frame_PokemonChoice, text="Pv : "+str(pikachu.get_pv()), font=(None, 23))
