@@ -5,6 +5,8 @@ import socket
 import threading
 import sys
 from random import randint
+import c_pokemon
+import c_dresseur
 
 customtkinter.set_appearance_mode("dark")
 customtkinter.set_default_color_theme("dark-blue")
@@ -343,7 +345,16 @@ def client_receive() :
                 displayPlayers()
             elif "!invite:" in message :
                 message = message.replace("!invite:", "")
+                message = message.split(",")
                 print(message)
+                if message[0] == username :
+                    recvInvite(message[1])
+            elif "!inviteaccepted:" in message :
+                message = message.replace("!inviteaccepted:", "")
+                #message = message.split(",")
+                print(message)
+                if message == username :
+                    battle()
             else :
                 print(message)
                 textbox_Chat.insert("0.0", message+"\n\n")
@@ -401,9 +412,10 @@ def lobby() :
 
 playerButtons = []
 chosenPlayer = None
+optionMenu_Players = None
 
 def displayPlayers() :
-    global players 
+    global players, optionMenu_Players
     players.pop(0)
     values = ["Players"]
     #players = ["Josh","Bo","Tony","Al","Ebenezer"]
@@ -431,16 +443,76 @@ def playerChosen(text) :
     chosenPlayer = text
     print(text)
 
+inviteDenied = True
+inviterName = None
+
 def requestBattle() :
     # send invite to chosen player
-    client.send(f"!invite:{chosenPlayer}".encode(FORMAT))
-    pass
+    if inviteDenied :
+        client.send(f"!invite:{chosenPlayer},{username}".encode(FORMAT))
+        textbox_Chat.insert("0.0", f"Invite sent to {chosenPlayer}\n")
+    elif optionMenu_Players.get() == inviterName :
+        client.send(f"!inviteaccepted:{username}".encode(FORMAT))
+        battle()
 
 def backToMain() :
     global client
     client.close()
     frame_LobbyFrame.place(relx=10)
     tabView.place(relx=.5, rely=.488, anchor=CENTER)
+
+def recvInvite(inviter : str) :
+    global inviterName, inviteDenied
+    for label in playerButtons :
+        if label.cget("text") == inviter :
+            label.configure(text=label.cget("text")+" wants to battle!", text_color="yellow")
+            inviterName = inviter
+            inviteDenied = False
+#endregion
+
+#region Battle
+
+#region Pokemon
+with open("..\\PokemonBattleSimulator\\PokemonData\\Meta\\pokemonMetaData.txt", "r") as file :
+    pokemon = file.readlines()
+for i in range(len(pokemon)) :
+    pokemon[i] = pokemon[i].replace("\n", "")
+for i in range(len(pokemon)) :
+    pokemon[i] = pokemon[i].split(",")
+
+pikachu = c_pokemon.Pokemon(pokemon[0][0], int(pokemon[0][1]), int(pokemon[0][2]), int(pokemon[0][3]), int(pokemon[0][4]))
+charizard = c_pokemon.Pokemon(pokemon[1][0], int(pokemon[1][1]), int(pokemon[1][2]), int(pokemon[1][3]), int(pokemon[1][4]))
+lucario = c_pokemon.Pokemon(pokemon[2][0], int(pokemon[2][1]), int(pokemon[2][2]), int(pokemon[2][3]), int(pokemon[2][4]))
+mewtwo = c_pokemon.Pokemon(pokemon[3][0], int(pokemon[3][1]), int(pokemon[3][2]), int(pokemon[3][3]), int(pokemon[3][4]))
+suicune = c_pokemon.Pokemon(pokemon[4][0], int(pokemon[4][1]), int(pokemon[4][2]), int(pokemon[4][3]), int(pokemon[4][4]))
+rayquaza = c_pokemon.Pokemon(pokemon[5][0], int(pokemon[5][1]), int(pokemon[5][2]), int(pokemon[5][3]), int(pokemon[5][4]))
+#endregion
+
+frame_PokemonChoice = customtkinter.CTkFrame(master=window, width=window._current_width-20, height=window._current_height-20)
+
+image_Pikachu = customtkinter.CTkImage(light_image=Image.open("..\\PokemonBattleSimulator\\PokemonData\\Images\\Pikachu.png"), size=(270,250))
+button_PokemonImage1 = customtkinter.CTkButton(master=frame_PokemonChoice, text="", image=image_Pikachu, width=430, height=400, fg_color="#222222", hover=False)
+label_Name = customtkinter.CTkLabel(master=frame_PokemonChoice, text=pikachu.get_nom(), font=(None, 25))
+label_Pv = customtkinter.CTkLabel(master=frame_PokemonChoice, text="Pv : "+str(pikachu.get_pv()), font=(None, 23))
+label_Attaque = customtkinter.CTkLabel(master=frame_PokemonChoice, text="Attaque : "+str(pikachu.get_attaque()), font=(None, 23))
+label_Defense = customtkinter.CTkLabel(master=frame_PokemonChoice, text="Defense : "+str(pikachu.get_defense()), font=(None, 23))
+label_Level = customtkinter.CTkLabel(master=frame_PokemonChoice, text="Level : "+str(pikachu.get_niveau())+" / 100", font=(None, 23))
+#image_Pikachu = customtkinter.CTkImage(light_image=Image.open("..\\PokemonBattleSimulator\\PokemonData\Meta\\Charizard.png"), size=(34,23))
+
+def battle() :
+    frame_LobbyFrame.place(relx=10)
+
+    frame_PokemonChoice.place(relx=.5, rely=.5, anchor=CENTER)
+
+    button_PokemonImage1.place(relx=.5, rely=.5, anchor=CENTER)
+    label_Name.place(relx=.65, rely=.34, anchor=CENTER)
+    label_Pv.place(relx=.65, rely=.43, anchor=CENTER)
+    label_Attaque.place(relx=.65, rely=.5, anchor=CENTER)
+    label_Defense.place(relx=.65, rely=.57, anchor=CENTER)
+    label_Level.place(relx=.65, rely=.64, anchor=CENTER)
+    # choose your pokemon
+
+
 #endregion
 
 
