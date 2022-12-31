@@ -342,49 +342,57 @@ def client_receive() :
             print(message)
             if message == "alias?" :
                 client.send(username.encode(FORMAT))
-            #elif message.replace("b'", "")[0] == "!" :
-            elif "!players:" in message :
-                global players
-                client.send(" ".encode(FORMAT))
-                message = message.replace("!players:", "")
-                message = message.replace("[", "")
-                message = message.replace("]", "")
-                message = message.replace("b'", "")
-                message = message[:-1]
-                message = message.split(",")
-                players = message
-                i = 0
-                for player in players :
-                    player = player.replace(" ", "")
-                    player = player.replace("'", "")
-                    players[i] = player
-                    i += 1
-                players.remove(username)
-                displayPlayers()
-            elif "!invite:" in message :
-                message = message.replace("!invite:", "")
-                message = message.split(",")
-                print(message)
-                if message[0] == username :
-                    recvInvite(message[1])
-            elif "!inviteaccepted:" in message :
-                message = message.replace("!inviteaccepted:", "")
-                #message = message.split(",")
-                print(message)
-                if message == chosenPlayer :
-                    battle()
-            elif "!left:" in message :
-                message = message.replace("!left:", "")
-                message = message.replace("b'", "")
-                message = message[:-1]
-                print(message)
-                print(players)
-                global poppedPlayer
-                poppedPlayer = players.index(message)
-                print(poppedPlayer)
-                players.remove(message)
-                print(players)
-                displayPlayers()
+            elif "!" in message :
+                if "!players:" in message :
+                    global players
+                    client.send(" ".encode(FORMAT))
+                    message = message.replace("!players:", "")
+                    message = message.replace("[", "")
+                    message = message.replace("]", "")
+                    message = message.replace("b'", "")
+                    message = message[:-1]
+                    message = message.split(",")
+                    players = message
+                    i = 0
+                    for player in players :
+                        player = player.replace(" ", "")
+                        player = player.replace("'", "")
+                        players[i] = player
+                        i += 1
+                    players.remove(username)
+                    displayPlayers()
+                elif "!invite:" in message :
+                    message = message.replace("!invite:", "")
+                    message = message.split(",")
+                    print(message)
+                    if message[0] == username :
+                        recvInvite(message[1])
+                elif "!inviteaccepted:" in message :
+                    message = message.replace("!inviteaccepted:", "")
+                    #message = message.split(",")
+                    print(message)
+                    if message == chosenPlayer :
+                        battle()
+                elif "!left:" in message :
+                    message = message.replace("!left:", "")
+                    message = message.replace("b'", "")
+                    message = message[:-1]
+                    print(message)
+                    print(players)
+                    global poppedPlayer
+                    poppedPlayer = players.index(message)
+                    print(poppedPlayer)
+                    players.remove(message)
+                    print(players)
+                    displayPlayers()
+                elif "!ready:" in message :
+                    global opponentIsReady
+                    message = message.replace("!ready:", "")
+                    message = message.replace("b'", "")
+                    message = message.split(",")
+                    print(message)
+                    if message[1] == chosenPlayer :
+                        goToBattle()
             else :
                 print(message)
                 textbox_Chat.insert("0.0", message+"\n\n")
@@ -446,7 +454,7 @@ optionMenu_Players = None
 poppedPlayer = None
 
 def displayPlayers() :
-    global players, playerLabels
+    global players, playerLabels, optionMenu_Players
     values = ["Players"]
     j = 0
     for label in playerLabels :
@@ -454,26 +462,11 @@ def displayPlayers() :
         playerLabels.pop(j)
         j += 1
 
-    #players = ["Josh","Bo","Tony","Al","Ebenezer"]
-
     i = 0
     n = .04
     distanceBetweenButtons = .07
 
-    #if playerButtons != [] and poppedPlayer != None:
-    #    playerButtons[poppedPlayer].destroy()
-    #    poppedPlayer = None
-
-    for player in players :
-        #if player == username :
-        #    client.close()
-        #    if username[len(username)-1] in "0123456789" :
-        #        username = username[:-1] + str(int(username[-1])+1)
-        #    else :
-        #        username += "1"
-        #    client_connect(str(ip), int(port))
-
-        
+    for player in players :      
         values.append(player)
         playerLabels.append(None)
         playerLabels[i] = customtkinter.CTkLabel(master=frame_Players, text=player, width=180, height=25, font=(None, 17))
@@ -539,29 +532,140 @@ rayquaza = c_pokemon.Pokemon(pokemon[5][0], int(pokemon[5][1]), int(pokemon[5][2
 
 frame_PokemonChoice = customtkinter.CTkFrame(master=window, width=window._current_width-20, height=window._current_height-20)
 
-image_Pikachu = customtkinter.CTkImage(light_image=Image.open(f"{pokImagesLoc}Pikachu.png"), size=(270,250))
+image_Pikachu = customtkinter.CTkImage(Image.open(f"{pokImagesLoc}Pikachu.png"), size=(270,250))
+image_Charizard = customtkinter.CTkImage(Image.open(f"{pokImagesLoc}Charizard.png"), size=(300,230))
+image_Lucario = customtkinter.CTkImage(Image.open(f"{pokImagesLoc}Lucario.png"), size=(160, 280))
+image_Mewtwo = customtkinter.CTkImage(Image.open(f"{pokImagesLoc}Mewtwo.png"), size=(250, 280))
+image_Suicune = customtkinter.CTkImage(Image.open(f"{pokImagesLoc}Suicune.png"), size=(290, 260))
+image_Rayquaza = customtkinter.CTkImage(Image.open(f"{pokImagesLoc}Rayquaza.png"), size=(250, 280))
+
 button_PokemonImage1 = customtkinter.CTkButton(master=frame_PokemonChoice, text="", image=image_Pikachu, width=430, height=400, fg_color="#222222", hover=False)
 label_Name = customtkinter.CTkLabel(master=frame_PokemonChoice, text=pikachu.get_nom(), font=(None, 25))
 label_Pv = customtkinter.CTkLabel(master=frame_PokemonChoice, text="Pv : "+str(pikachu.get_pv()), font=(None, 23))
 label_Attaque = customtkinter.CTkLabel(master=frame_PokemonChoice, text="Attaque : "+str(pikachu.get_attaque()), font=(None, 23))
 label_Defense = customtkinter.CTkLabel(master=frame_PokemonChoice, text="Defense : "+str(pikachu.get_defense()), font=(None, 23))
 label_Level = customtkinter.CTkLabel(master=frame_PokemonChoice, text="Level : "+str(pikachu.get_niveau())+" / 100", font=(None, 23))
-#image_Pikachu = customtkinter.CTkImage(light_image=Image.open("..\\PokemonBattleSimulator\\PokemonData\Meta\\Charizard.png"), size=(34,23))
 
 def battle() :
+    global pokemon
+
     frame_LobbyFrame.place(relx=10)
 
     frame_PokemonChoice.place(relx=.5, rely=.5, anchor=CENTER)
+    label_PokemonChoice = customtkinter.CTkLabel(master=frame_PokemonChoice, text="Choose a Pokemon", font=(None, 28))
+    label_PokemonChoice.place(relx=.5, rely=.1, anchor=CENTER)
 
-    button_PokemonImage1.place(relx=.5, rely=.5, anchor=CENTER)
-    label_Name.place(relx=.65, rely=.34, anchor=CENTER)
-    label_Pv.place(relx=.65, rely=.43, anchor=CENTER)
-    label_Attaque.place(relx=.65, rely=.5, anchor=CENTER)
-    label_Defense.place(relx=.65, rely=.57, anchor=CENTER)
-    label_Level.place(relx=.65, rely=.64, anchor=CENTER)
+    optionMenu_Pokemon.place(relx=.5, rely=.18, anchor=CENTER)
+
+    button_PokemonImage1.place(relx=.3, rely=.5, anchor=CENTER)
+    label_Name.place(relx=.6, rely=.37, anchor=CENTER)
+    label_Pv.place(relx=.6, rely=.44, anchor=CENTER)
+    label_Attaque.place(relx=.6, rely=.51, anchor=CENTER)
+    label_Defense.place(relx=.6, rely=.58, anchor=CENTER)
+    label_Level.place(relx=.6, rely=.65, anchor=CENTER)
+
+    button_Choose = customtkinter.CTkButton(master=frame_PokemonChoice, text="Play", font=(None, 23), height=30, width=100, command=waitForOpponent)
+    button_Choose.place(relx=.5, rely=.9, anchor=CENTER)
     # choose your pokemon
 
+chosenPokemon = pikachu
 
+def choosePokemon(pokName) :
+    # Display the appropriate pokemon info
+    global button_PokemonImage1, chosenPokemon
+    if pokName == "Pikachu" :
+        button_PokemonImage1.destroy()
+        button_PokemonImage1 = customtkinter.CTkButton(master=frame_PokemonChoice, width=270, height=250, image=image_Pikachu, text="", fg_color="#222222", hover=False)
+        button_PokemonImage1.place(relx=.3, rely=.5, anchor=CENTER)
+        label_Name.configure(text=pikachu.get_nom())
+        label_Pv.configure(text="Pv : "+str(pikachu.get_pv()))
+        label_Attaque.configure(text="Attaque : "+str(pikachu.get_attaque()))
+        label_Defense.configure(text="Defense : "+str(pikachu.get_defense()))
+        label_Level.configure(text="Level : "+str(pikachu.get_niveau())+" / 100")
+        chosenPokemon = pikachu
+    elif pokName == "Charizard" :
+        button_PokemonImage1.destroy()
+        button_PokemonImage1 = customtkinter.CTkButton(master=frame_PokemonChoice, width=300, height=230, image=image_Charizard, text="", fg_color="#222222", hover=False)
+        button_PokemonImage1.place(relx=.26, rely=.5, anchor=CENTER)
+        label_Name.configure(text=charizard.get_nom())
+        label_Pv.configure(text="Pv : "+str(charizard.get_pv()))
+        label_Attaque.configure(text="Attaque : "+str(charizard.get_attaque()))
+        label_Defense.configure(text="Defense : "+str(charizard.get_defense()))
+        label_Level.configure(text="Level : "+str(charizard.get_niveau())+" / 100")
+        chosenPokemon = charizard
+    elif pokName == "Lucario" :
+        button_PokemonImage1.destroy()
+        button_PokemonImage1 = customtkinter.CTkButton(master=frame_PokemonChoice, width=150, height=280, image=image_Lucario, text="", fg_color="#222222", hover=False)
+        button_PokemonImage1.place(relx=.3, rely=.55, anchor=CENTER)
+        label_Name.configure(text=lucario.get_nom())
+        label_Pv.configure(text="Pv : "+str(lucario.get_pv()))
+        label_Attaque.configure(text="Attaque : "+str(lucario.get_attaque()))
+        label_Defense.configure(text="Defense : "+str(lucario.get_defense()))
+        label_Level.configure(text="Level : "+str(lucario.get_niveau())+" / 100")
+        chosenPokemon = lucario
+    elif pokName == "Mewtwo" :
+        button_PokemonImage1.destroy()
+        button_PokemonImage1 = customtkinter.CTkButton(master=frame_PokemonChoice, width=260, height=280, image=image_Mewtwo, text="", fg_color="#222222", hover=False)
+        button_PokemonImage1.place(relx=.27, rely=.55, anchor=CENTER)
+        label_Name.configure(text=mewtwo.get_nom())
+        label_Pv.configure(text="Pv : "+str(mewtwo.get_pv()))
+        label_Attaque.configure(text="Attaque : "+str(mewtwo.get_attaque()))
+        label_Defense.configure(text="Defense : "+str(mewtwo.get_defense()))
+        label_Level.configure(text="Level : "+str(mewtwo.get_niveau())+" / 100")
+        chosenPokemon = mewtwo
+    elif pokName == "Suicune" :
+        button_PokemonImage1.destroy()
+        button_PokemonImage1 = customtkinter.CTkButton(master=frame_PokemonChoice, width=290, height=260, image=image_Suicune, text="", fg_color="#222222", hover=False)
+        button_PokemonImage1.place(relx=.26, rely=.5, anchor=CENTER)
+        label_Name.configure(text=suicune.get_nom())
+        label_Pv.configure(text="Pv : "+str(suicune.get_pv()))
+        label_Attaque.configure(text="Attaque : "+str(suicune.get_attaque()))
+        label_Defense.configure(text="Defense : "+str(suicune.get_defense()))
+        label_Level.configure(text="Level : "+str(suicune.get_niveau())+" / 100")
+        chosenPokemon = suicune
+    elif pokName == "Rayquaza" :
+        button_PokemonImage1.destroy()
+        button_PokemonImage1 = customtkinter.CTkButton(master=frame_PokemonChoice, width=250, height=280, image=image_Rayquaza, text="", fg_color="#222222", hover=False)
+        button_PokemonImage1.place(relx=.27, rely=.55, anchor=CENTER)
+        label_Name.configure(text=rayquaza.get_nom())
+        label_Pv.configure(text="Pv : "+str(rayquaza.get_pv()))
+        label_Attaque.configure(text="Attaque : "+str(rayquaza.get_attaque()))
+        label_Defense.configure(text="Defense : "+str(rayquaza.get_defense()))
+        label_Level.configure(text="Level : "+str(rayquaza.get_niveau())+" / 100")
+        chosenPokemon = rayquaza
+
+#region Battle for real
+
+frame_Battle = customtkinter.CTkFrame(master=window, width=window._current_width-20, height=window._current_height-20)
+
+tamer = c_dresseur.Dresseur(username, chosenPokemon)
+
+def goToBattle() :
+
+    label_Loading.destroy()
+    progressBar.destroy()
+
+    button_MyPokemon = customtkinter.CTkButton(master=frame_Battle, image=button_PokemonImage1.cget("image"), width=button_PokemonImage1._current_width-20, height=button_PokemonImage1._current_height-20, text="", hover=False, fg_color="#222222")
+    button_MyPokemon.place(relx=.26, rely=.6, anchor=CENTER)
+
+    print(f"Your pokemon is {tamer.get_nom_pokemon()}")
+
+label_Loading = customtkinter.CTkLabel(master=frame_Battle, text="Waiting for opponent", text_color="white", font=(None, 31))
+progressBar = customtkinter.CTkProgressBar(master=frame_Battle, width=300, height=15, progress_color="yellow", mode="indeterminate", indeterminate_speed=1)
+
+def waitForOpponent() :
+    frame_PokemonChoice.place(relx=-10)
+    frame_Battle.place(relx=.5, rely=.5, anchor=CENTER)
+    label_Loading.place(relx=.5, rely=.4, anchor=CENTER)
+    progressBar.place(relx=.5, rely=.5, anchor=CENTER)
+    progressBar.start()
+    client.send(f"!ready:{tamer.get_nom_pokemon()},{username}".encode(FORMAT))
+#endregion
+
+pokemonNames = []
+for i in pokemon :
+    pokemonNames.append(i[0])
+optionMenu_Pokemon = customtkinter.CTkOptionMenu(master=frame_PokemonChoice, values=pokemonNames, command=choosePokemon)
 #endregion
 
 
