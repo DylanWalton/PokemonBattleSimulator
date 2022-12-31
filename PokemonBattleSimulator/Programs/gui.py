@@ -386,13 +386,17 @@ def client_receive() :
                     print(players)
                     displayPlayers()
                 elif "!ready:" in message :
-                    global opponentIsReady
                     message = message.replace("!ready:", "")
                     message = message.replace("b'", "")
                     message = message.split(",")
                     print(message)
                     if message[1] == chosenPlayer :
-                        goToBattle()
+                        global opponentPokemon
+                        opponentPokemon = message[0]
+                        if tamer == None :
+                            global opponentIsReady
+                            opponentIsReady = True
+                        else : goToBattle()
             else :
                 print(message)
                 textbox_Chat.insert("0.0", message+"\n\n")
@@ -638,8 +642,6 @@ def choosePokemon(pokName) :
 
 frame_Battle = customtkinter.CTkFrame(master=window, width=window._current_width-20, height=window._current_height-20)
 
-tamer = c_dresseur.Dresseur(username, chosenPokemon)
-
 def goToBattle() :
 
     label_Loading.destroy()
@@ -648,18 +650,56 @@ def goToBattle() :
     button_MyPokemon = customtkinter.CTkButton(master=frame_Battle, image=button_PokemonImage1.cget("image"), width=button_PokemonImage1._current_width-20, height=button_PokemonImage1._current_height-20, text="", hover=False, fg_color="#222222")
     button_MyPokemon.place(relx=.26, rely=.6, anchor=CENTER)
 
+    if opponentPokemon == "Pikachu" :
+        button_OtherPokemon = customtkinter.CTkButton(master=frame_Battle, image=image_Pikachu, width=250, height=230, hover=False, fg_color="#222222")
+        button_OtherPokemon.place(relx=.8, rely=.3, anchor=CENTER)
+    elif opponentPokemon == "Charizard" :
+        button_OtherPokemon = customtkinter.CTkButton(master=frame_Battle, image=image_Charizard, width=280, height=210, hover=False, fg_color="#222222")
+        button_OtherPokemon.place(relx=.8, rely=.3, anchor=CENTER)
+    elif opponentPokemon == "Lucario" :
+        button_OtherPokemon = customtkinter.CTkButton(master=frame_Battle, image=image_Lucario, width=140, height=260, hover=False, fg_color="#222222")
+        button_OtherPokemon.place(relx=.8, rely=.3, anchor=CENTER)
+    elif opponentPokemon == "Mewtwo" :
+        button_OtherPokemon = customtkinter.CTkButton(master=frame_Battle, image=image_Mewtwo, width=230, height=260, hover=False, fg_color="#222222")
+        button_OtherPokemon.place(relx=.8, rely=.3, anchor=CENTER)
+    elif opponentPokemon == "Suicune" :
+        button_OtherPokemon = customtkinter.CTkButton(master=frame_Battle, image=image_Suicune, width=270, height=240, hover=False, fg_color="#222222")
+        button_OtherPokemon.place(relx=.8, rely=.3, anchor=CENTER)
+    elif opponentPokemon == "Rayquaza" :
+        button_OtherPokemon = customtkinter.CTkButton(master=frame_Battle, image=image_Rayquaza, width=230, height=260, hover=False, fg_color="#222222")
+        button_OtherPokemon.place(relx=.8, rely=.3, anchor=CENTER)
+
+    label_Name = customtkinter.CTkLabel(master=frame_Battle, text=tamer.get_nom_pokemon(), font=(None, 23), text_color="blue")
+    progressBar_HP = customtkinter.CTkProgressBar(master=frame_Battle, width=250, height=12, progress_color="green")
+    label_HP = customtkinter.CTkLabel(master=frame_Battle, text=f"{str(tamer.get_pokemon().get_pv())}/{str(tamer.get_pokemon().get_pv())}", font=(None, 13), text_color="green")
+    label_Lvl = customtkinter.CTkLabel(master=frame_Battle, text=str(tamer.get_pokemon().get_niveau()), font=(None, 13), text_color="pink")
+    progressBar_HP.set(1)
+    label_Name.place(.2, .6, CENTER)
+    progressBar_HP.place(.3, .66, CENTER)
+    label_HP.place(.2, .69, CENTER)
+    label_Lvl.place(.27, .69, CENTER)
+
     print(f"Your pokemon is {tamer.get_nom_pokemon()}")
 
 label_Loading = customtkinter.CTkLabel(master=frame_Battle, text="Waiting for opponent", text_color="white", font=(None, 31))
 progressBar = customtkinter.CTkProgressBar(master=frame_Battle, width=300, height=15, progress_color="yellow", mode="indeterminate", indeterminate_speed=1)
 
+opponentPokemon = None
+opponentIsReady = False
+tamer = None
+
 def waitForOpponent() :
+    global tamer
+    tamer = c_dresseur.Dresseur(username, chosenPokemon)
+    client.send(f"!ready:{tamer.get_nom_pokemon()},{tamer.get_nom_dresseur()}".encode(FORMAT))
     frame_PokemonChoice.place(relx=-10)
     frame_Battle.place(relx=.5, rely=.5, anchor=CENTER)
     label_Loading.place(relx=.5, rely=.4, anchor=CENTER)
     progressBar.place(relx=.5, rely=.5, anchor=CENTER)
     progressBar.start()
-    client.send(f"!ready:{tamer.get_nom_pokemon()},{username}".encode(FORMAT))
+    
+    if opponentIsReady : goToBattle()
+
 #endregion
 
 pokemonNames = []
