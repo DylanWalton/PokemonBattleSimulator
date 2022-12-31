@@ -3,7 +3,6 @@ import customtkinter
 from PIL import Image
 import socket
 import threading
-import sys
 from random import randint
 import c_pokemon
 import c_dresseur
@@ -68,7 +67,12 @@ def settings() :
     tabView.set("Settings")
 
 def quit() :
-    sys.exit()
+    #try :
+    #    client.send(f"!left:{username}".encode(FORMAT))
+    #    client.close()
+    #except :
+    #    exit()
+    exit()
 #endregion
 
 #region Labels
@@ -335,8 +339,10 @@ def client_receive() :
     while True :
         try :
             message = client.recv(1024).decode(FORMAT)
+            print(message)
             if message == "alias?" :
                 client.send(username.encode(FORMAT))
+            #elif message.replace("b'", "")[0] == "!" :
             elif "!players:" in message :
                 global players
                 client.send(" ".encode(FORMAT))
@@ -347,13 +353,13 @@ def client_receive() :
                 message = message[:-1]
                 message = message.split(",")
                 players = message
-                players.pop(0)
                 i = 0
                 for player in players :
                     player = player.replace(" ", "")
                     player = player.replace("'", "")
                     players[i] = player
-                    i += 0
+                    i += 1
+                players.remove(username)
                 displayPlayers()
             elif "!invite:" in message :
                 message = message.replace("!invite:", "")
@@ -365,18 +371,20 @@ def client_receive() :
                 message = message.replace("!inviteaccepted:", "")
                 #message = message.split(",")
                 print(message)
-                if message == username :
+                if message == chosenPlayer :
                     battle()
             elif "!left:" in message :
-                 message = message.replace("!left:", "")
-                 message = message.replace("b'", "")
-                 message = message[:-1]
-                 print(message)
-                 print(players)
-                 global poppedPlayer
-                 poppedPlayer = players.index(message)
-                 players.remove(message)
-                 displayPlayers()
+                message = message.replace("!left:", "")
+                message = message.replace("b'", "")
+                message = message[:-1]
+                print(message)
+                print(players)
+                global poppedPlayer
+                poppedPlayer = players.index(message)
+                print(poppedPlayer)
+                players.remove(message)
+                print(players)
+                displayPlayers()
             else :
                 print(message)
                 textbox_Chat.insert("0.0", message+"\n\n")
@@ -432,33 +440,45 @@ def lobby() :
     label_Chat.place(relx=.18, rely=.126, anchor=W)
     textbox_Chat.place(relx=0, rely=.54, anchor=W)
 
-playerButtons = []
+playerLabels = []
 chosenPlayer = None
 optionMenu_Players = None
-poppedPlayer = 0
+poppedPlayer = None
 
 def displayPlayers() :
-    global players, optionMenu_Players
-    #players.pop(0)
-    print(players)
+    global players, playerLabels
     values = ["Players"]
+    j = 0
+    for label in playerLabels :
+        label.destroy()
+        playerLabels.pop(j)
+        j += 1
+
     #players = ["Josh","Bo","Tony","Al","Ebenezer"]
 
     i = 0
     n = .04
     distanceBetweenButtons = .07
 
-    if players == [] and playerButtons != []:
-        playerButtons[poppedPlayer].destroy()
+    #if playerButtons != [] and poppedPlayer != None:
+    #    playerButtons[poppedPlayer].destroy()
+    #    poppedPlayer = None
 
     for player in players :
-        #player = player.replace(" ", "")
-        #player = player.replace("'", "")
+        #if player == username :
+        #    client.close()
+        #    if username[len(username)-1] in "0123456789" :
+        #        username = username[:-1] + str(int(username[-1])+1)
+        #    else :
+        #        username += "1"
+        #    client_connect(str(ip), int(port))
+
+        
         values.append(player)
-        playerButtons.append(None)
-        playerButtons[i] = customtkinter.CTkLabel(master=frame_Players, text=player, width=180, height=25, font=(None, 17))
+        playerLabels.append(None)
+        playerLabels[i] = customtkinter.CTkLabel(master=frame_Players, text=player, width=180, height=25, font=(None, 17))
         #, corner_radius=0, fg_color="#121212"
-        playerButtons[i].place(relx=.5, rely=n, anchor=CENTER)
+        playerLabels[i].place(relx=.5, rely=n, anchor=CENTER)
         i += 1
         n += distanceBetweenButtons
     print(players)
@@ -491,11 +511,12 @@ def backToMain() :
 
 def recvInvite(inviter : str) :
     global inviterName, inviteDenied
-    for label in playerButtons :
+    for label in playerLabels :
         if label.cget("text") == inviter :
             label.configure(text=label.cget("text")+" wants to battle!", text_color="yellow")
             inviterName = inviter
             inviteDenied = False
+            break
 #endregion
 
 #region Battle
