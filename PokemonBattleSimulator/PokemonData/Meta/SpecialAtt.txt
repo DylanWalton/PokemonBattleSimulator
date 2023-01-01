@@ -1,0 +1,28 @@
+!Name,Damage,Uses,EffectOnOther,EffectOnSelf,RoundsToTakeEffect
+Lobotimisation,160,3,n,Ethical Damage:10,3
+Lancer de chaise,30,8,n,n,n
+Extincteur,0,5,n,FlameOff,n
+Pikachu
+Thunder Shock,40,5,n,n,n
+Spark,65,4,n,n,n
+Quick Attack,40,5,n,n,n
+Charizard
+Dragon Claw,80,5,n,n,n
+Flare Blitz,120,3,Fire:20,n,3
+Slash,70,5,n,n,n
+Lucario
+Meteor Mash,90,5,n,n,n
+Close Combat,120,4,n,n,n
+Dragon Pulse,85,4,n,n,n
+Mewtwo
+Future Sight,120,5,n,His Investments Went Down:10,1
+Psystrike,100,4,n,n,n
+Ancient Power,60,6,n,n,n
+Suicune
+Blizzard,110,4,Cold:15,n,3
+Hydro Pump,110,5,n,n,n
+Bite,60,4,n,n,n
+Rayquaza
+Hyper Beam,150,3,n,n,n
+Outrage,120,3,n,LessDamage:30,2
+Dragon Ascent,120,4,n,n,n
