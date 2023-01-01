@@ -409,6 +409,8 @@ def client_receive() :
                     message = message.replace("$attack:", "")
                     message = message.split(",")
                     print(message)
+                    if message[0] == chosenPlayer :
+                        takeDamage(message)
 
             else :
                 print(message)
@@ -665,8 +667,10 @@ def goToBattle() :
     button_MyPokemon = customtkinter.CTkButton(master=frame_Battle, image=button_PokemonImage1.cget("image"), width=button_PokemonImage1._current_width-20, height=button_PokemonImage1._current_height-20, text="", hover=False, fg_color="#222222")
     button_MyPokemon.place(relx=.24, rely=.72, anchor=CENTER)
 
-    global progressBar_HP, label_HP, progressBar_OppHP, label_OppHP, attack1Info, attack2Info, attack3Info, attack4Info, button_Attack1, button_Attack2, button_Attack3, button_Attack4, numAtt1, numAtt2, numAtt3, numAtt4
+    global progressBar_HP, label_HP, progressBar_OppHP, label_OppHP, attack1Info, attack2Info, attack3Info, attack4Info, button_Attack1, button_Attack2, button_Attack3, button_Attack4, numAtt1, numAtt2, numAtt3, numAtt4, maxHp
     
+    maxHp = tamer.get_pokemon().get_pv()
+
     frame_OppInfo = customtkinter.CTkFrame(master=frame_Battle, width=220, height=76, border_width=1, border_color="#483d41", fg_color="#2e3030")
     label_OppName = customtkinter.CTkLabel(master=frame_OppInfo, text=opponentPokemon, font=(None, 23), text_color="#fa1b2d")
     progressBar_OppHP = customtkinter.CTkProgressBar(master=frame_OppInfo, width=200, height=13, progress_color="green")
@@ -758,6 +762,10 @@ def goToBattle() :
     print(f"Your pokemon is {tamer.get_nom_pokemon()}")
 
 def attack1() :
+    button_Attack1.configure(state="disabled")
+    button_Attack2.configure(state="disabled")
+    button_Attack3.configure(state="disabled")
+    button_Attack4.configure(state="disabled")
     global numAtt1
     numAtt1 -= 1
     button_Attack1.configure(text=f"{attack1Info[0]} {numAtt1}/{attack1Info[2]}")
@@ -765,11 +773,11 @@ def attack1() :
     if numAtt1 == 0 :
         button_Attack1.configure(state="disabled")
 
-    damage = float(attack1Info[1]) * (tamer.get_pokemon().get_attaque() * .01)/3
+    damage = int(attack1Info[1]) * (tamer.get_pokemon().get_attaque() * .01)/3
     if attack1Info[3] != "n" and attack1Info[5] != "n" :
         effectOnOther = attack1Info[3]
         effectOnOther = effectOnOther.split(":")
-        effectOnOther[1] = float(effectOnOther[1])
+        effectOnOther[1] = int(effectOnOther[1])
         effectOnOther[1] *= (tamer.get_pokemon().get_attaque() * .01)
         effectOnOther[1] -= .5
         roundsForEffect = attack1Info[5]
@@ -777,36 +785,102 @@ def attack1() :
     else :
         client.send(f"$attack:{username},{damage},n,n".encode(FORMAT))
 
+    #if attack1Info[4] != "n" :
+    #    if ":" in attack1Info[4] :
+    #        effect = attack1Info[4].split(":")
+    #        if effect[0] == "Ethical Damage" :
+    #            damage = int(effect[1])
+    #            damage -= int(tamer.get_pokemon().get_defense() * .01)
+        
+
 def attack2() :
+    button_Attack1.configure(state="disabled")
+    button_Attack2.configure(state="disabled")
+    button_Attack3.configure(state="disabled")
+    button_Attack4.configure(state="disabled")
+    global numAtt2
     numAtt2 -= 1
     button_Attack2.configure(text=f"{attack2Info[0]} {numAtt2}/{attack2Info[2]}")
-    damage = attack2Info[1] * (tamer.get_pokemon().get_attaque() * .01)
-    effectOnOther = attack2Info[3]
-    effectOnOther = effectOnOther.split(":")
-    effectOnOther[1] *= (tamer.get_pokemon().get_attaque() * .01)
-    roundsForEffect = attack2Info[5]
-    client.send(f"$attack:{damage},{effectOnOther[0]}:{effectOnOther[1]},{roundsForEffect}".encode(FORMAT))
+
+    if numAtt2 == 0 :
+        button_Attack2.configure(state="disabled")
+
+    damage = int(attack2Info[1]) * (tamer.get_pokemon().get_attaque() * .01)/3
+    if attack2Info[3] != "n" and attack2Info[5] != "n" :
+        effectOnOther = attack2Info[3]
+        effectOnOther = effectOnOther.split(":")
+        effectOnOther[1] = int(effectOnOther[1])
+        effectOnOther[1] *= (tamer.get_pokemon().get_attaque() * .01)
+        effectOnOther[1] -= .5
+        roundsForEffect = attack2Info[5]
+        client.send(f"$attack:{username},{damage},{effectOnOther[0]}:{effectOnOther[1]},{roundsForEffect}".encode(FORMAT))
+    else :
+        client.send(f"$attack:{username},{damage},n,n".encode(FORMAT))
 
 def attack3() :
+    button_Attack1.configure(state="disabled")
+    button_Attack2.configure(state="disabled")
+    button_Attack3.configure(state="disabled")
+    button_Attack4.configure(state="disabled")
+    global numAtt3
     numAtt3 -= 1
     button_Attack3.configure(text=f"{attack3Info[0]} {numAtt3}/{attack3Info[2]}")
-    damage = attack3Info[1] * (tamer.get_pokemon().get_attaque() * .01)
-    effectOnOther = attack3Info[3]
-    effectOnOther = effectOnOther.split(":")
-    effectOnOther[1] *= (tamer.get_pokemon().get_attaque() * .01)
-    roundsForEffect = attack3Info[5]
-    client.send(f"$attack:{damage},{effectOnOther[0]}:{effectOnOther[1]},{roundsForEffect}".encode(FORMAT))
+
+    if numAtt3 == 0 :
+        button_Attack3.configure(state="disabled")
+
+    damage = int(attack3Info[1]) * (tamer.get_pokemon().get_attaque() * .01)/3
+    if attack3Info[3] != "n" and attack3Info[5] != "n" :
+        effectOnOther = attack3Info[3]
+        effectOnOther = effectOnOther.split(":")
+        effectOnOther[1] = int(effectOnOther[1])
+        effectOnOther[1] *= (tamer.get_pokemon().get_attaque() * .01)
+        effectOnOther[1] -= .5
+        roundsForEffect = attack3Info[5]
+        client.send(f"$attack:{username},{damage},{effectOnOther[0]}:{effectOnOther[1]},{roundsForEffect}".encode(FORMAT))
+    else :
+        client.send(f"$attack:{username},{damage},n,n".encode(FORMAT))
 
 def attack4() :
+    button_Attack1.configure(state="disabled")
+    button_Attack2.configure(state="disabled")
+    button_Attack3.configure(state="disabled")
+    button_Attack4.configure(state="disabled")
+    global numAtt4
     numAtt4 -= 1
     button_Attack4.configure(text=f"{attack4Info[0]} {numAtt4}/{attack4Info[2]}")
-    damage = attack4Info[1] * (tamer.get_pokemon().get_attaque() * .01)
-    effectOnOther = attack4Info[3]
-    effectOnOther = effectOnOther.split(":")
-    effectOnOther[1] *= (tamer.get_pokemon().get_attaque() * .01)
-    roundsForEffect = attack4Info[5]
-    client.send(f"$attack:{damage},{effectOnOther[0]}:{effectOnOther[1]},{roundsForEffect}".encode(FORMAT))
 
+    if numAtt4 == 0 :
+        button_Attack4.configure(state="disabled")
+
+    damage = int(attack4Info[1]) * (tamer.get_pokemon().get_attaque() * .01)/3
+    if attack4Info[3] != "n" and attack4Info[5] != "n" :
+        effectOnOther = attack4Info[3]
+        effectOnOther = effectOnOther.split(":")
+        effectOnOther[1] = int(effectOnOther[1])
+        effectOnOther[1] *= (tamer.get_pokemon().get_attaque() * .01)
+        effectOnOther[1] -= .5
+        roundsForEffect = attack4Info[5]
+        client.send(f"$attack:{username},{damage},{effectOnOther[0]}:{effectOnOther[1]},{roundsForEffect}".encode(FORMAT))
+    else :
+        client.send(f"$attack:{username},{damage},n,n".encode(FORMAT))
+
+def takeDamage(message) :
+    button_Attack1.configure(state="normal")
+    button_Attack2.configure(state="normal")
+    button_Attack3.configure(state="normal")
+    button_Attack4.configure(state="normal")
+    print(message[1])
+    damage = int(float(message[1]))
+    print(damage)
+    damage -= int(tamer.get_pokemon().get_defense() * .01)
+    tamer.get_pokemon().set_degats(damage)
+    print(tamer.get_pokemon().get_pv() / maxHp)
+    progressBar_HP.set(tamer.get_pokemon().get_pv() / maxHp)
+
+    if tamer.get_pokemon().get_pv() :
+        # end the battle
+        print("Death!")
 
 
 label_Loading = customtkinter.CTkLabel(master=frame_Battle, text="Waiting for opponent", text_color="white", font=(None, 31))
