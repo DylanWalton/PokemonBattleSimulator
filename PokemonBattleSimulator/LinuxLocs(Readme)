@@ -1,0 +1,4 @@
+assetsLoc = "../Assets/"
+dataLoc = "../Data/"
+pokImagesLoc = "../PokemonData/Images/"
+pokMetaLoc = "../PokemonData/Meta/"
