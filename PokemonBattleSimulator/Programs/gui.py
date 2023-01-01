@@ -67,11 +67,10 @@ def settings() :
     tabView.set("Settings")
 
 def quit() :
-    #try :
-    #    client.send(f"!left:{username}".encode(FORMAT))
-    #    client.close()
-    #except :
-    #    exit()
+    try :
+        client.close()
+    except :
+        exit()
     exit()
 #endregion
 
@@ -776,9 +775,11 @@ def attack1() :
         effectOnOther[1] *= (tamer.get_pokemon().get_attaque() * .01)
         effectOnOther[1] -= .5
         roundsForEffect = attack1Info[5]
-        client.send(f"$attack:{username},{damage},{effectOnOther[0]}:{effectOnOther[1]},{roundsForEffect}".encode(FORMAT))
+        client.send(f"$attack:{username},{damage},{effectOnOther[0]}:{effectOnOther[1]},{roundsForEffect},{attack1Info[0]}".encode(FORMAT))
     else :
-        client.send(f"$attack:{username},{damage},n,n".encode(FORMAT))
+        client.send(f"$attack:{username},{damage},n,n,{attack1Info[0]}".encode(FORMAT))
+
+    textbox_Effects.insert("0.0", f"{tamer.get_nom_pokemon()}(you) used {attack1Info[0]} for {int(damage)} damage!")
 
     if attack1Info[0] == "Future Sight" :
         dmgName = attack1Info[4].split(":")
@@ -806,9 +807,11 @@ def attack2() :
         effectOnOther[1] *= (tamer.get_pokemon().get_attaque() * .01)
         effectOnOther[1] -= .5
         roundsForEffect = attack2Info[5]
-        client.send(f"$attack:{username},{damage},{effectOnOther[0]}:{effectOnOther[1]},{roundsForEffect}".encode(FORMAT))
+        client.send(f"$attack:{username},{damage},{effectOnOther[0]}:{effectOnOther[1]},{roundsForEffect},{attack2Info[0]}".encode(FORMAT))
     else :
-        client.send(f"$attack:{username},{damage},n,n".encode(FORMAT))
+        client.send(f"$attack:{username},{damage},n,n,{attack2Info[0]}".encode(FORMAT))
+
+    textbox_Effects.insert("0.0", f"{tamer.get_nom_pokemon()}(you) used {attack2Info[0]} for {int(damage)} damage!")
 
 def attack3() :
     button_Attack1.configure(state="disabled")
@@ -830,9 +833,11 @@ def attack3() :
         effectOnOther[1] *= (tamer.get_pokemon().get_attaque() * .01)
         effectOnOther[1] -= .5
         roundsForEffect = attack3Info[5]
-        client.send(f"$attack:{username},{damage},{effectOnOther[0]}:{effectOnOther[1]},{roundsForEffect}".encode(FORMAT))
+        client.send(f"$attack:{username},{damage},{effectOnOther[0]}:{effectOnOther[1]},{roundsForEffect},{attack3Info[0]}".encode(FORMAT))
     else :
-        client.send(f"$attack:{username},{damage},n,n".encode(FORMAT))
+        client.send(f"$attack:{username},{damage},n,n,{attack3Info[0]}".encode(FORMAT))
+
+    textbox_Effects.insert("0.0", f"{tamer.get_nom_pokemon()}(you) used {attack3Info[0]} for {int(damage)} damage!")
 
 def attack4() :
     button_Attack1.configure(state="disabled")
@@ -854,9 +859,11 @@ def attack4() :
         effectOnOther[1] *= (tamer.get_pokemon().get_attaque() * .01)
         effectOnOther[1] -= .5
         roundsForEffect = attack4Info[5]
-        client.send(f"$attack:{username},{damage},{effectOnOther[0]}:{effectOnOther[1]},{roundsForEffect}".encode(FORMAT))
+        client.send(f"$attack:{username},{damage},{effectOnOther[0]}:{effectOnOther[1]},{roundsForEffect},{attack4Info[0]}".encode(FORMAT))
     else :
-        client.send(f"$attack:{username},{damage},n,n".encode(FORMAT))
+        client.send(f"$attack:{username},{damage},n,n,{attack4Info[0]}".encode(FORMAT))
+
+    textbox_Effects.insert("0.0", f"{tamer.get_nom_pokemon()}(you) used {attack4Info[0]} for {int(damage)} damage!")
 
     if attack4Info[0] == "Extincteur" :
         if "Fire" in effectNames :
@@ -873,8 +880,10 @@ def takeDamage(message, effect : bool) :
     damage = int(float(message[1]))
     damage -= int(tamer.get_pokemon().get_defense() * .01)
     tamer.get_pokemon().set_degats(damage)
+    label_HP.configure(text=f"{str(tamer.get_pokemon().get_pv())}/{maxHp}")
     progressBar_HP.set(tamer.get_pokemon().get_pv() / maxHp)
     client.send(f"$health:{tamer.get_pokemon().get_pv()},{username}".encode(FORMAT))
+    textbox_Effects.insert("0.0", f"{opponentPokemon} used {message[5]} for {damage}!")
 
     if effect :
         print(message)
@@ -891,10 +900,10 @@ def takeDamage(message, effect : bool) :
         roundsForEffectLeft[effect] -= 1
         dmg = damagePerRound[effect]
         dmg -= int(tamer.get_pokemon().get_defense() * .01) 
-        tamer.get_pokemon().set_degats(damage)
+        tamer.get_pokemon().set_degats(dmg)
         progressBar_HP.set(tamer.get_pokemon().get_pv() / maxHp)
-        client.send(f"$health:{tamer.get_pokemon().get_pv()},{username}")
-        textbox_Effects.insert("0.0", effectNames[effect])
+        client.send(f"$health:{tamer.get_pokemon().get_pv()},{username}".encode(FORMAT))
+        textbox_Effects.insert("0.0", f"{effectNames[effect]} -> {dmg}\n")
 
         if roundsForEffectLeft[effect] == 0 :
             roundsForEffectLeft.pop(effect)
