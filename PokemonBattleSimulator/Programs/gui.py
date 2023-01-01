@@ -142,7 +142,6 @@ def set_username() :
         username = entry_Username.get()
         with open (f"{dataLoc}username.txt", "w") as file :
             file.write(username)
-        print(entry_Username.get())
     else :
         entry_Username.delete(0, len(entry_Username.get()))
         entry_Username.configure(placeholder_text="Limit Exceeded!", placeholder_text_color="red")
@@ -196,9 +195,6 @@ def activatePreset(value) :
         entry_IP.configure(placeholder_text="Enter the server IP address (i.e 127.0.0.1)", placeholder_text_color="grey")
         entry_Port.configure(placeholder_text="Enter the server port to connect to (i.e 1234)", placeholder_text_color="grey")
         ip, port = "", 0
-
-def set_ServerName(name : str) :
-    print(name)
 #endregion
 
 # Username Stuff
@@ -339,7 +335,6 @@ def client_receive() :
     while True :
         try :
             message = client.recv(1024).decode(FORMAT)
-            print(message)
             if message == "alias?" :
                 client.send(username.encode(FORMAT))
             elif "!" in message :
@@ -364,66 +359,55 @@ def client_receive() :
                 elif "!invite:" in message :
                     message = message.replace("!invite:", "")
                     message = message.split(",")
-                    print(message)
                     if message[0] == username :
                         recvInvite(message[1])
                 elif "!inviteaccepted:" in message :
                     message = message.replace("!inviteaccepted:", "")
                     #message = message.split(",")
-                    print(message)
                     if message == chosenPlayer :
                         battle()
                 elif "!left:" in message :
                     message = message.replace("!left:", "")
                     message = message.replace("b'", "")
                     message = message[:-1]
-                    print(message)
-                    print(players)
                     global poppedPlayer
                     poppedPlayer = players.index(message)
-                    print(poppedPlayer)
                     players.remove(message)
-                    print(players)
                     displayPlayers()
                 elif "!ready:" in message :
                     message = message.replace("!ready:", "")
                     message = message.replace("b'", "")
                     message = message.split(",")
-                    print(message)
                     if message[1] == chosenPlayer :
                         global opponentPokemon, opponentLvl, opponentHP
                         opponentPokemon = message[0]
                         opponentLvl = int(message[2])
-                        print(message[3])
                         opponentHP = int(message[3])
                         if tamer == None :
                             global opponentIsReady
                             opponentIsReady = True
                         else : goToBattle()
                 else :
-                    print(message)
                     textbox_Chat.insert("0.0", message+"\n\n")
             elif "$" in message :
                 if "$attack:" in message :
                     message = message.replace("b'", "")
                     message = message.replace("$attack:", "")
                     message = message.split(",")
-                    print(message)
                     if message[0] == chosenPlayer :
-                        if message[3] != "n" :
+                        if message[2] != "n" :
                             takeDamage(message, True)
                         else :
                             takeDamage(message, False)
 
                 if "$health:" in message :
                     message = message.replace("b'", "")
-                    message = message.replace("$attack:", "")
+                    message = message.replace("$health:", "")
                     message = message.split(",")
                     if message[1] == chosenPlayer :
                         oppHealthVis(message[0])
 
             else :
-                print(message)
                 textbox_Chat.insert("0.0", message+"\n\n")
         except :
             print("Error!")
@@ -507,7 +491,6 @@ def displayPlayers() :
         playerLabels[i].place(relx=.5, rely=n, anchor=CENTER)
         i += 1
         n += distanceBetweenButtons
-    print(players)
 
     optionMenu_Players = customtkinter.CTkOptionMenu(master=frame_LobbyFrame, values=values, command=playerChosen, width=160)
     optionMenu_Players.place(relx=.873, rely=.19, anchor=CENTER)
@@ -515,7 +498,6 @@ def displayPlayers() :
 def playerChosen(text) :
     global chosenPlayer
     chosenPlayer = text
-    print(text)
 
 inviteDenied = True
 inviterName = None
@@ -740,10 +722,6 @@ def goToBattle() :
             attack4Info = allAtt[randint(1, 3)]
             attack4Info = attack4Info.replace("\n", "")
             attack4Info = attack4Info.split(",")
-            print(attack1Info)
-            print(attack2Info)
-            print(attack3Info)
-            print(attack4Info)
             break
 
     numAtt1 = int(attack1Info[2])
@@ -774,11 +752,8 @@ def goToBattle() :
     button_Attack3.place(relx=.25, rely=.74, anchor=CENTER)
     button_Attack4.place(relx=.75, rely=.74, anchor=CENTER)
     
-    textbox_Effects = customtkinter.CTkLabel(master=frame_Battle, width=230, height=200, border_color="black", border_width=1, text_color="white")
-    textbox_Effects.place(relx=.3, rely=.3, anchor=CENTER)
-
-
-    print(f"Your pokemon is {tamer.get_nom_pokemon()}")
+    textbox_Effects = customtkinter.CTkTextbox(master=frame_Battle, width=230, height=70, border_color="black", border_width=1, text_color="white")
+    textbox_Effects.place(relx=.2, rely=.1, anchor=CENTER)
 
 def attack1() :
     button_Attack1.configure(state="disabled")
@@ -789,7 +764,7 @@ def attack1() :
     numAtt1 -= 1
     button_Attack1.configure(text=f"{attack1Info[0]} {numAtt1}/{attack1Info[2]}")
 
-    if numAtt1 == 0 :
+    if numAtt1 < 1 :
         button_Attack1.configure(state="disabled")
 
     damage = int(attack1Info[1]) * (tamer.get_pokemon().get_attaque() * .01)/3
@@ -804,6 +779,12 @@ def attack1() :
         client.send(f"$attack:{username},{damage},{effectOnOther[0]}:{effectOnOther[1]},{roundsForEffect}".encode(FORMAT))
     else :
         client.send(f"$attack:{username},{damage},n,n".encode(FORMAT))
+
+    if attack1Info[0] == "Future Sight" :
+        dmgName = attack1Info[4].split(":")
+        roundsForEffectLeft.append(int(attack1Info[5]))
+        damagePerRound.append(int(dmgName[1]))
+        effectNames.append(dmgName[0])
         
 def attack2() :
     button_Attack1.configure(state="disabled")
@@ -814,7 +795,7 @@ def attack2() :
     numAtt2 -= 1
     button_Attack2.configure(text=f"{attack2Info[0]} {numAtt2}/{attack2Info[2]}")
 
-    if numAtt2 == 0 :
+    if numAtt2 < 1 :
         button_Attack2.configure(state="disabled")
 
     damage = int(attack2Info[1]) * (tamer.get_pokemon().get_attaque() * .01)/3
@@ -838,7 +819,7 @@ def attack3() :
     numAtt3 -= 1
     button_Attack3.configure(text=f"{attack3Info[0]} {numAtt3}/{attack3Info[2]}")
 
-    if numAtt3 == 0 :
+    if numAtt3 < 1 :
         button_Attack3.configure(state="disabled")
 
     damage = int(attack3Info[1]) * (tamer.get_pokemon().get_attaque() * .01)/3
@@ -862,7 +843,7 @@ def attack4() :
     numAtt4 -= 1
     button_Attack4.configure(text=f"{attack4Info[0]} {numAtt4}/{attack4Info[2]}")
 
-    if numAtt4 == 0 :
+    if numAtt4 < 1 :
         button_Attack4.configure(state="disabled")
 
     damage = int(attack4Info[1]) * (tamer.get_pokemon().get_attaque() * .01)/3
@@ -878,54 +859,56 @@ def attack4() :
         client.send(f"$attack:{username},{damage},n,n".encode(FORMAT))
 
     if attack4Info[0] == "Extincteur" :
-        popThisEffect = effectNames.index("Fire")
-        effectNames.pop(popThisEffect)
-        roundsForEffect.pop(popThisEffect)
-        damagePerRound.pop(popThisEffect)
+        if "Fire" in effectNames :
+            popThisEffect = effectNames.index("Fire")
+            effectNames.pop(popThisEffect)
+            roundsForEffect.pop(popThisEffect)
+            damagePerRound.pop(popThisEffect)
 
 def takeDamage(message, effect : bool) :
     button_Attack1.configure(state="normal")
     button_Attack2.configure(state="normal")
     button_Attack3.configure(state="normal")
     button_Attack4.configure(state="normal")
-    print(message[1])
     damage = int(float(message[1]))
-    print(damage)
     damage -= int(tamer.get_pokemon().get_defense() * .01)
     tamer.get_pokemon().set_degats(damage)
     progressBar_HP.set(tamer.get_pokemon().get_pv() / maxHp)
-    client.send(f"$health:{tamer.get_pokemon().get_pv()},{username}")
-    print(tamer.get_pokemon().get_pv() / maxHp)
+    client.send(f"$health:{tamer.get_pokemon().get_pv()},{username}".encode(FORMAT))
 
     if effect :
+        print(message)
         message[2] = message[2].split(":")
+        print(message)
         roundsForEffectLeft.append(int(message[3]))
+        print(roundsForEffectLeft)
         damagePerRound.append(int(message[2][1]))
+        print(damagePerRound)
         effectNames.append(message[2][0])
+        print(effectNames)
 
-    if roundsForEffectLeft != [] :
-        for effect in range(len(roundsForEffectLeft)) :
-            roundsForEffectLeft[effect] -= 1
-            dmg = damagePerRound[effect]
-            dmg -= int(tamer.get_pokemon().get_defense() * .01) 
-            tamer.get_pokemon().set_degats(damage)
-            progressBar_HP.set(tamer.get_pokemon().get_pv() / maxHp)
-            client.send(f"$health:{tamer.get_pokemon().get_pv()},{username}")
-            textbox_Effects.insert("0.0", effectNames[effect])
+    for effect in range(len(roundsForEffectLeft)) :
+        roundsForEffectLeft[effect] -= 1
+        dmg = damagePerRound[effect]
+        dmg -= int(tamer.get_pokemon().get_defense() * .01) 
+        tamer.get_pokemon().set_degats(damage)
+        progressBar_HP.set(tamer.get_pokemon().get_pv() / maxHp)
+        client.send(f"$health:{tamer.get_pokemon().get_pv()},{username}")
+        textbox_Effects.insert("0.0", effectNames[effect])
 
-            if roundsForEffectLeft[effect] == 0 :
-                roundsForEffectLeft.pop(effect)
-                damagePerRound.pop(effect)
-                effectNames.pop(effect)
+        if roundsForEffectLeft[effect] == 0 :
+            roundsForEffectLeft.pop(effect)
+            damagePerRound.pop(effect)
+            effectNames.pop(effect)
 
 
-    if tamer.get_pokemon().get_pv() :
+    if tamer.get_pokemon().get_pv() == 0 :
         # end the battle
         print("Death!")
 
 def oppHealthVis(health) :
-    progressBar_OppHP.set(health/opponentHP)
     label_OppHP.configure(text=f"{health}/{opponentHP}")
+    progressBar_OppHP.set(int(health) / opponentHP)
 
 label_Loading = customtkinter.CTkLabel(master=frame_Battle, text="Waiting for opponent", text_color="white", font=(None, 31))
 progressBar = customtkinter.CTkProgressBar(master=frame_Battle, width=300, height=15, progress_color="yellow", mode="indeterminate", indeterminate_speed=1)
@@ -937,7 +920,6 @@ tamer = None
 def waitForOpponent() :
     global tamer
     tamer = c_dresseur.Dresseur(username, chosenPokemon)
-    print(tamer.get_pokemon().get_pv())
     client.send(f"!ready:{tamer.get_nom_pokemon()},{tamer.get_nom_dresseur()},{tamer.get_pokemon().get_niveau()},{tamer.get_pokemon().get_pv()}".encode(FORMAT))
     frame_PokemonChoice.place(relx=-10)
     frame_Battle.place(relx=.5, rely=.5, anchor=CENTER)
