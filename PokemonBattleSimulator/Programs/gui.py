@@ -410,7 +410,17 @@ def client_receive() :
                     message = message.split(",")
                     print(message)
                     if message[0] == chosenPlayer :
-                        takeDamage(message)
+                        if message[3] != "n" :
+                            takeDamage(message, True)
+                        else :
+                            takeDamage(message, False)
+
+                if "$health:" in message :
+                    message = message.replace("b'", "")
+                    message = message.replace("$attack:", "")
+                    message = message.split(",")
+                    if message[1] == chosenPlayer :
+                        oppHealthVis(message[0])
 
             else :
                 print(message)
@@ -419,6 +429,10 @@ def client_receive() :
             print("Error!")
             client.close()
             break
+
+roundsForEffectLeft = []
+damagePerRound = []
+effectNames = []
 
 def client_send() :
     if entry_Chat.get() != "" :
@@ -667,8 +681,9 @@ def goToBattle() :
     button_MyPokemon = customtkinter.CTkButton(master=frame_Battle, image=button_PokemonImage1.cget("image"), width=button_PokemonImage1._current_width-20, height=button_PokemonImage1._current_height-20, text="", hover=False, fg_color="#222222")
     button_MyPokemon.place(relx=.24, rely=.72, anchor=CENTER)
 
-    global progressBar_HP, label_HP, progressBar_OppHP, label_OppHP, attack1Info, attack2Info, attack3Info, attack4Info, button_Attack1, button_Attack2, button_Attack3, button_Attack4, numAtt1, numAtt2, numAtt3, numAtt4, maxHp
+    global progressBar_HP, label_HP, progressBar_OppHP, label_OppHP, attack1Info, attack2Info, attack3Info, attack4Info, button_Attack1, button_Attack2, button_Attack3, button_Attack4, numAtt1, numAtt2, numAtt3, numAtt4, maxHp, textbox_Effects
     
+
     maxHp = tamer.get_pokemon().get_pv()
 
     frame_OppInfo = customtkinter.CTkFrame(master=frame_Battle, width=220, height=76, border_width=1, border_color="#483d41", fg_color="#2e3030")
@@ -758,6 +773,10 @@ def goToBattle() :
     button_Attack2.place(relx=.75, rely=.26, anchor=CENTER)
     button_Attack3.place(relx=.25, rely=.74, anchor=CENTER)
     button_Attack4.place(relx=.75, rely=.74, anchor=CENTER)
+    
+    textbox_Effects = customtkinter.CTkLabel(master=frame_Battle, width=230, height=200, border_color="black", border_width=1, text_color="white")
+    textbox_Effects.place(relx=.3, rely=.3, anchor=CENTER)
+
 
     print(f"Your pokemon is {tamer.get_nom_pokemon()}")
 
@@ -774,6 +793,7 @@ def attack1() :
         button_Attack1.configure(state="disabled")
 
     damage = int(attack1Info[1]) * (tamer.get_pokemon().get_attaque() * .01)/3
+
     if attack1Info[3] != "n" and attack1Info[5] != "n" :
         effectOnOther = attack1Info[3]
         effectOnOther = effectOnOther.split(":")
@@ -784,15 +804,7 @@ def attack1() :
         client.send(f"$attack:{username},{damage},{effectOnOther[0]}:{effectOnOther[1]},{roundsForEffect}".encode(FORMAT))
     else :
         client.send(f"$attack:{username},{damage},n,n".encode(FORMAT))
-
-    #if attack1Info[4] != "n" :
-    #    if ":" in attack1Info[4] :
-    #        effect = attack1Info[4].split(":")
-    #        if effect[0] == "Ethical Damage" :
-    #            damage = int(effect[1])
-    #            damage -= int(tamer.get_pokemon().get_defense() * .01)
         
-
 def attack2() :
     button_Attack1.configure(state="disabled")
     button_Attack2.configure(state="disabled")
@@ -865,7 +877,13 @@ def attack4() :
     else :
         client.send(f"$attack:{username},{damage},n,n".encode(FORMAT))
 
-def takeDamage(message) :
+    if attack4Info[0] == "Extincteur" :
+        popThisEffect = effectNames.index("Fire")
+        effectNames.pop(popThisEffect)
+        roundsForEffect.pop(popThisEffect)
+        damagePerRound.pop(popThisEffect)
+
+def takeDamage(message, effect : bool) :
     button_Attack1.configure(state="normal")
     button_Attack2.configure(state="normal")
     button_Attack3.configure(state="normal")
@@ -875,13 +893,39 @@ def takeDamage(message) :
     print(damage)
     damage -= int(tamer.get_pokemon().get_defense() * .01)
     tamer.get_pokemon().set_degats(damage)
-    print(tamer.get_pokemon().get_pv() / maxHp)
     progressBar_HP.set(tamer.get_pokemon().get_pv() / maxHp)
+    client.send(f"$health:{tamer.get_pokemon().get_pv()},{username}")
+    print(tamer.get_pokemon().get_pv() / maxHp)
+
+    if effect :
+        message[2] = message[2].split(":")
+        roundsForEffectLeft.append(int(message[3]))
+        damagePerRound.append(int(message[2][1]))
+        effectNames.append(message[2][0])
+
+    if roundsForEffectLeft != [] :
+        for effect in range(len(roundsForEffectLeft)) :
+            roundsForEffectLeft[effect] -= 1
+            dmg = damagePerRound[effect]
+            dmg -= int(tamer.get_pokemon().get_defense() * .01) 
+            tamer.get_pokemon().set_degats(damage)
+            progressBar_HP.set(tamer.get_pokemon().get_pv() / maxHp)
+            client.send(f"$health:{tamer.get_pokemon().get_pv()},{username}")
+            textbox_Effects.insert("0.0", effectNames[effect])
+
+            if roundsForEffectLeft[effect] == 0 :
+                roundsForEffectLeft.pop(effect)
+                damagePerRound.pop(effect)
+                effectNames.pop(effect)
+
 
     if tamer.get_pokemon().get_pv() :
         # end the battle
         print("Death!")
 
+def oppHealthVis(health) :
+    progressBar_OppHP.set(health/opponentHP)
+    label_OppHP.configure(text=f"{health}/{opponentHP}")
 
 label_Loading = customtkinter.CTkLabel(master=frame_Battle, text="Waiting for opponent", text_color="white", font=(None, 31))
 progressBar = customtkinter.CTkProgressBar(master=frame_Battle, width=300, height=15, progress_color="yellow", mode="indeterminate", indeterminate_speed=1)
