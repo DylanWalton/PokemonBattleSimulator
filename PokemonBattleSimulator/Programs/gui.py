@@ -391,12 +391,17 @@ def client_receive() :
                     message = message.split(",")
                     print(message)
                     if message[1] == chosenPlayer :
-                        global opponentPokemon
+                        global opponentPokemon, opponentLvl, opponentHP
                         opponentPokemon = message[0]
+                        opponentLvl = int(message[2])
+                        opponentHP = int(message[3])
                         if tamer == None :
                             global opponentIsReady
                             opponentIsReady = True
                         else : goToBattle()
+                else :
+                    print(message)
+                    textbox_Chat.insert("0.0", message+"\n\n")
             else :
                 print(message)
                 textbox_Chat.insert("0.0", message+"\n\n")
@@ -641,6 +646,8 @@ def choosePokemon(pokName) :
 #region Battle for real
 
 frame_Battle = customtkinter.CTkFrame(master=window, width=window._current_width-20, height=window._current_height-20)
+opponentLvl = None
+opponentHP = None
 
 def goToBattle() :
 
@@ -648,38 +655,56 @@ def goToBattle() :
     progressBar.destroy()
 
     button_MyPokemon = customtkinter.CTkButton(master=frame_Battle, image=button_PokemonImage1.cget("image"), width=button_PokemonImage1._current_width-20, height=button_PokemonImage1._current_height-20, text="", hover=False, fg_color="#222222")
-    button_MyPokemon.place(relx=.26, rely=.6, anchor=CENTER)
+    button_MyPokemon.place(relx=.24, rely=.74, anchor=CENTER)
+
+    global progressBar_HP, label_HP, progressBar_OppHP, label_OppHP
+    
+    frame_OppInfo = customtkinter.CTkFrame(master=frame_Battle, width=220, height=76, border_width=1, border_color="#483d41")
+    label_OppName = customtkinter.CTkLabel(master=frame_Info, text=opponentPokemon, font=(None, 23), text_color="#fa1b2d")
+    progressBar_OppHP = customtkinter.CTkProgressBar(master=frame_Info, width=200, height=13, progress_color="green")
+    label_OppHP = customtkinter.CTkLabel(master=frame_Info, text=f"{opponentHP/opponentHP}", font=(None, 13), text_color="green")
+    label_OppLvl = customtkinter.CTkLabel(master=frame_Info, text=f"Level:{opponentLvl}", font=(None, 13), text_color="#f62681")
+    progressBar_OppHP.set(1)
+    frame_OppInfo.place(relx=.8, rely=.7, anchor=CENTER)
+    label_OppName.place(relx=.27, rely=.2, anchor=CENTER)
+    progressBar_OppHP.place(relx=.5, rely=.5, anchor=CENTER)
+    label_OppHP.place(relx=.14, rely=.8, anchor=CENTER)
+    label_OppLvl.place(relx=.6, rely=.8, anchor=CENTER)
 
     if opponentPokemon == "Pikachu" :
-        button_OtherPokemon = customtkinter.CTkButton(master=frame_Battle, image=image_Pikachu, width=250, height=230, hover=False, fg_color="#222222")
+        button_OtherPokemon = customtkinter.CTkButton(master=frame_Battle, image=image_Pikachu, width=220, height=200, hover=False, fg_color="#222222", text="")
         button_OtherPokemon.place(relx=.8, rely=.3, anchor=CENTER)
     elif opponentPokemon == "Charizard" :
-        button_OtherPokemon = customtkinter.CTkButton(master=frame_Battle, image=image_Charizard, width=280, height=210, hover=False, fg_color="#222222")
+        button_OtherPokemon = customtkinter.CTkButton(master=frame_Battle, image=image_Charizard, width=250, height=180, hover=False, fg_color="#222222", text="")
         button_OtherPokemon.place(relx=.8, rely=.3, anchor=CENTER)
     elif opponentPokemon == "Lucario" :
-        button_OtherPokemon = customtkinter.CTkButton(master=frame_Battle, image=image_Lucario, width=140, height=260, hover=False, fg_color="#222222")
-        button_OtherPokemon.place(relx=.8, rely=.3, anchor=CENTER)
+        button_OtherPokemon = customtkinter.CTkButton(master=frame_Battle, image=image_Lucario, width=110, height=230, hover=False, fg_color="#222222", text="")
+        button_OtherPokemon.place(relx=.85, rely=.3, anchor=CENTER)
     elif opponentPokemon == "Mewtwo" :
-        button_OtherPokemon = customtkinter.CTkButton(master=frame_Battle, image=image_Mewtwo, width=230, height=260, hover=False, fg_color="#222222")
+        button_OtherPokemon = customtkinter.CTkButton(master=frame_Battle, image=image_Mewtwo, width=200, height=230, hover=False, fg_color="#222222", text="")
         button_OtherPokemon.place(relx=.8, rely=.3, anchor=CENTER)
     elif opponentPokemon == "Suicune" :
-        button_OtherPokemon = customtkinter.CTkButton(master=frame_Battle, image=image_Suicune, width=270, height=240, hover=False, fg_color="#222222")
+        button_OtherPokemon = customtkinter.CTkButton(master=frame_Battle, image=image_Suicune, width=240, height=210, hover=False, fg_color="#222222", text="")
         button_OtherPokemon.place(relx=.8, rely=.3, anchor=CENTER)
     elif opponentPokemon == "Rayquaza" :
-        button_OtherPokemon = customtkinter.CTkButton(master=frame_Battle, image=image_Rayquaza, width=230, height=260, hover=False, fg_color="#222222")
+        button_OtherPokemon = customtkinter.CTkButton(master=frame_Battle, image=image_Rayquaza, width=200, height=230, hover=False, fg_color="#222222", text="")
         button_OtherPokemon.place(relx=.8, rely=.3, anchor=CENTER)
 
-    label_Name = customtkinter.CTkLabel(master=frame_Battle, text=tamer.get_nom_pokemon(), font=(None, 23), text_color="blue")
-    progressBar_HP = customtkinter.CTkProgressBar(master=frame_Battle, width=250, height=12, progress_color="green")
-    label_HP = customtkinter.CTkLabel(master=frame_Battle, text=f"{str(tamer.get_pokemon().get_pv())}/{str(tamer.get_pokemon().get_pv())}", font=(None, 13), text_color="green")
-    label_Lvl = customtkinter.CTkLabel(master=frame_Battle, text=str(tamer.get_pokemon().get_niveau()), font=(None, 13), text_color="pink")
+    frame_Info = customtkinter.CTkFrame(master=frame_Battle, width=220, height=76, border_width=1, border_color="#483d41")
+    label_Name = customtkinter.CTkLabel(master=frame_Info, text=tamer.get_nom_pokemon(), font=(None, 23), text_color="white")
+    progressBar_HP = customtkinter.CTkProgressBar(master=frame_Info, width=200, height=13, progress_color="green")
+    label_HP = customtkinter.CTkLabel(master=frame_Info, text=f"{str(tamer.get_pokemon().get_pv())}/{str(tamer.get_pokemon().get_pv())}", font=(None, 13), text_color="green")
+    label_Lvl = customtkinter.CTkLabel(master=frame_Info, text=f"Level:{str(tamer.get_pokemon().get_niveau())}", font=(None, 13), text_color="#f62681")
     progressBar_HP.set(1)
-    label_Name.place(.2, .6, CENTER)
-    progressBar_HP.place(.3, .66, CENTER)
-    label_HP.place(.2, .69, CENTER)
-    label_Lvl.place(.27, .69, CENTER)
+    frame_Info.place(relx=.2, rely=.3, anchor=CENTER)
+    label_Name.place(relx=.27, rely=.2, anchor=CENTER)
+    progressBar_HP.place(relx=.5, rely=.5, anchor=CENTER)
+    label_HP.place(relx=.14, rely=.8, anchor=CENTER)
+    label_Lvl.place(relx=.6, rely=.8, anchor=CENTER)
 
     print(f"Your pokemon is {tamer.get_nom_pokemon()}")
+
+
 
 label_Loading = customtkinter.CTkLabel(master=frame_Battle, text="Waiting for opponent", text_color="white", font=(None, 31))
 progressBar = customtkinter.CTkProgressBar(master=frame_Battle, width=300, height=15, progress_color="yellow", mode="indeterminate", indeterminate_speed=1)
@@ -691,7 +716,7 @@ tamer = None
 def waitForOpponent() :
     global tamer
     tamer = c_dresseur.Dresseur(username, chosenPokemon)
-    client.send(f"!ready:{tamer.get_nom_pokemon()},{tamer.get_nom_dresseur()}".encode(FORMAT))
+    client.send(f"!ready:{tamer.get_nom_pokemon()},{tamer.get_nom_dresseur()},{tamer.get_pokemon().get_niveau()},{tamer.get_pokemon().get_pv()}".encode(FORMAT))
     frame_PokemonChoice.place(relx=-10)
     frame_Battle.place(relx=.5, rely=.5, anchor=CENTER)
     label_Loading.place(relx=.5, rely=.4, anchor=CENTER)
