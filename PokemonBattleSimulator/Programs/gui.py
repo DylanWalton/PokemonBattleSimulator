@@ -394,6 +394,7 @@ def client_receive() :
                         global opponentPokemon, opponentLvl, opponentHP
                         opponentPokemon = message[0]
                         opponentLvl = int(message[2])
+                        print(message[3])
                         opponentHP = int(message[3])
                         if tamer == None :
                             global opponentIsReady
@@ -660,12 +661,12 @@ def goToBattle() :
     global progressBar_HP, label_HP, progressBar_OppHP, label_OppHP
     
     frame_OppInfo = customtkinter.CTkFrame(master=frame_Battle, width=220, height=76, border_width=1, border_color="#483d41")
-    label_OppName = customtkinter.CTkLabel(master=frame_Info, text=opponentPokemon, font=(None, 23), text_color="#fa1b2d")
-    progressBar_OppHP = customtkinter.CTkProgressBar(master=frame_Info, width=200, height=13, progress_color="green")
-    label_OppHP = customtkinter.CTkLabel(master=frame_Info, text=f"{opponentHP/opponentHP}", font=(None, 13), text_color="green")
-    label_OppLvl = customtkinter.CTkLabel(master=frame_Info, text=f"Level:{opponentLvl}", font=(None, 13), text_color="#f62681")
+    label_OppName = customtkinter.CTkLabel(master=frame_OppInfo, text=opponentPokemon, font=(None, 23), text_color="#fa1b2d")
+    progressBar_OppHP = customtkinter.CTkProgressBar(master=frame_OppInfo, width=200, height=13, progress_color="green")
+    label_OppHP = customtkinter.CTkLabel(master=frame_OppInfo, text=f"{opponentHP}/{opponentHP}", font=(None, 13), text_color="green")
+    label_OppLvl = customtkinter.CTkLabel(master=frame_OppInfo, text=f"Level:{opponentLvl}", font=(None, 13), text_color="#f62681")
     progressBar_OppHP.set(1)
-    frame_OppInfo.place(relx=.8, rely=.7, anchor=CENTER)
+    frame_OppInfo.place(relx=.74, rely=.65, anchor=CENTER)
     label_OppName.place(relx=.27, rely=.2, anchor=CENTER)
     progressBar_OppHP.place(relx=.5, rely=.5, anchor=CENTER)
     label_OppHP.place(relx=.14, rely=.8, anchor=CENTER)
@@ -685,7 +686,7 @@ def goToBattle() :
         button_OtherPokemon.place(relx=.8, rely=.3, anchor=CENTER)
     elif opponentPokemon == "Suicune" :
         button_OtherPokemon = customtkinter.CTkButton(master=frame_Battle, image=image_Suicune, width=240, height=210, hover=False, fg_color="#222222", text="")
-        button_OtherPokemon.place(relx=.8, rely=.3, anchor=CENTER)
+        button_OtherPokemon.place(relx=.75, rely=.3, anchor=CENTER)
     elif opponentPokemon == "Rayquaza" :
         button_OtherPokemon = customtkinter.CTkButton(master=frame_Battle, image=image_Rayquaza, width=200, height=230, hover=False, fg_color="#222222", text="")
         button_OtherPokemon.place(relx=.8, rely=.3, anchor=CENTER)
@@ -716,6 +717,7 @@ tamer = None
 def waitForOpponent() :
     global tamer
     tamer = c_dresseur.Dresseur(username, chosenPokemon)
+    print(tamer.get_pokemon().get_pv())
     client.send(f"!ready:{tamer.get_nom_pokemon()},{tamer.get_nom_dresseur()},{tamer.get_pokemon().get_niveau()},{tamer.get_pokemon().get_pv()}".encode(FORMAT))
     frame_PokemonChoice.place(relx=-10)
     frame_Battle.place(relx=.5, rely=.5, anchor=CENTER)
