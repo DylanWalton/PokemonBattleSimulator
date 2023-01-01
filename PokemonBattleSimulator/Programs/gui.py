@@ -403,6 +403,13 @@ def client_receive() :
                 else :
                     print(message)
                     textbox_Chat.insert("0.0", message+"\n\n")
+            elif "$" in message :
+                if "$attack:" in message :
+                    message = message.replace("b'", "")
+                    message = message.replace("$attack:", "")
+                    message = message.split(",")
+                    print(message)
+
             else :
                 print(message)
                 textbox_Chat.insert("0.0", message+"\n\n")
@@ -656,17 +663,17 @@ def goToBattle() :
     progressBar.destroy()
 
     button_MyPokemon = customtkinter.CTkButton(master=frame_Battle, image=button_PokemonImage1.cget("image"), width=button_PokemonImage1._current_width-20, height=button_PokemonImage1._current_height-20, text="", hover=False, fg_color="#222222")
-    button_MyPokemon.place(relx=.24, rely=.74, anchor=CENTER)
+    button_MyPokemon.place(relx=.24, rely=.72, anchor=CENTER)
 
-    global progressBar_HP, label_HP, progressBar_OppHP, label_OppHP
+    global progressBar_HP, label_HP, progressBar_OppHP, label_OppHP, attack1Info, attack2Info, attack3Info, attack4Info, button_Attack1, button_Attack2, button_Attack3, button_Attack4, numAtt1, numAtt2, numAtt3, numAtt4
     
-    frame_OppInfo = customtkinter.CTkFrame(master=frame_Battle, width=220, height=76, border_width=1, border_color="#483d41")
+    frame_OppInfo = customtkinter.CTkFrame(master=frame_Battle, width=220, height=76, border_width=1, border_color="#483d41", fg_color="#2e3030")
     label_OppName = customtkinter.CTkLabel(master=frame_OppInfo, text=opponentPokemon, font=(None, 23), text_color="#fa1b2d")
     progressBar_OppHP = customtkinter.CTkProgressBar(master=frame_OppInfo, width=200, height=13, progress_color="green")
     label_OppHP = customtkinter.CTkLabel(master=frame_OppInfo, text=f"{opponentHP}/{opponentHP}", font=(None, 13), text_color="green")
     label_OppLvl = customtkinter.CTkLabel(master=frame_OppInfo, text=f"Level:{opponentLvl}", font=(None, 13), text_color="#f62681")
     progressBar_OppHP.set(1)
-    frame_OppInfo.place(relx=.74, rely=.65, anchor=CENTER)
+    frame_OppInfo.place(relx=.74, rely=.7, anchor=CENTER)
     label_OppName.place(relx=.27, rely=.2, anchor=CENTER)
     progressBar_OppHP.place(relx=.5, rely=.5, anchor=CENTER)
     label_OppHP.place(relx=.14, rely=.8, anchor=CENTER)
@@ -691,7 +698,41 @@ def goToBattle() :
         button_OtherPokemon = customtkinter.CTkButton(master=frame_Battle, image=image_Rayquaza, width=200, height=230, hover=False, fg_color="#222222", text="")
         button_OtherPokemon.place(relx=.8, rely=.3, anchor=CENTER)
 
-    frame_Info = customtkinter.CTkFrame(master=frame_Battle, width=220, height=76, border_width=1, border_color="#483d41")
+    allAtt = None
+    attack1Info = None
+    attack2Info = None
+    attack3Info = None
+    attack4Info = None
+
+    with open(f"{pokMetaLoc}SpecialAtt.txt", "r") as file :
+        allAtt = file.readlines()
+
+    for line_Num in range(len(allAtt)) :
+        if tamer.get_nom_pokemon() in allAtt[line_Num] :
+            attack1Info = allAtt[line_Num+1]
+            attack1Info = attack1Info.replace("\n", "")
+            attack1Info = attack1Info.split(",")
+            attack2Info = allAtt[line_Num+2]
+            attack2Info = attack2Info.replace("\n", "")
+            attack2Info = attack2Info.split(",")
+            attack3Info = allAtt[line_Num+3]
+            attack3Info = attack3Info.replace("\n", "")
+            attack3Info = attack3Info.split(",")
+            attack4Info = allAtt[randint(1, 3)]
+            attack4Info = attack4Info.replace("\n", "")
+            attack4Info = attack4Info.split(",")
+            print(attack1Info)
+            print(attack2Info)
+            print(attack3Info)
+            print(attack4Info)
+            break
+
+    numAtt1 = int(attack1Info[2])
+    numAtt2 = int(attack2Info[2])
+    numAtt3 = int(attack3Info[2])
+    numAtt4 = int(attack4Info[2])
+
+    frame_Info = customtkinter.CTkFrame(master=frame_Battle, width=220, height=76, border_width=1, border_color="#483d41", fg_color="#2e3030")
     label_Name = customtkinter.CTkLabel(master=frame_Info, text=tamer.get_nom_pokemon(), font=(None, 23), text_color="white")
     progressBar_HP = customtkinter.CTkProgressBar(master=frame_Info, width=200, height=13, progress_color="green")
     label_HP = customtkinter.CTkLabel(master=frame_Info, text=f"{str(tamer.get_pokemon().get_pv())}/{str(tamer.get_pokemon().get_pv())}", font=(None, 13), text_color="green")
@@ -703,7 +744,68 @@ def goToBattle() :
     label_HP.place(relx=.14, rely=.8, anchor=CENTER)
     label_Lvl.place(relx=.6, rely=.8, anchor=CENTER)
 
+    frame_Attacks = customtkinter.CTkFrame(master=frame_Battle, width=300, height=80, border_width=1, border_color="#00b3e5", fg_color="#282d3f")
+    button_Attack1 = customtkinter.CTkButton(master=frame_Attacks, command=attack1, text=f"{attack1Info[0]} {attack1Info[2]}/{attack1Info[2]}", border_width=1, border_color="black", height=35, font=(None,15))
+    button_Attack2 = customtkinter.CTkButton(master=frame_Attacks, command=attack2, text=f"{attack2Info[0]} {attack2Info[2]}/{attack2Info[2]}", border_width=1, border_color="black", height=35, font=(None,15))
+    button_Attack3 = customtkinter.CTkButton(master=frame_Attacks, command=attack3, text=f"{attack3Info[0]} {attack3Info[2]}/{attack3Info[2]}", border_width=1, border_color="black", height=35, font=(None,15))
+    button_Attack4 = customtkinter.CTkButton(master=frame_Attacks, command=attack4, text_color="yellow", text=f"{attack4Info[0]} {attack4Info[2]}/{attack4Info[2]}", border_width=1, border_color="black", height=35, font=(None,15))
+    frame_Attacks.place(relx=.7, rely=.9, anchor=CENTER)
+    button_Attack1.place(relx=.25, rely=.26, anchor=CENTER)
+    button_Attack2.place(relx=.75, rely=.26, anchor=CENTER)
+    button_Attack3.place(relx=.25, rely=.74, anchor=CENTER)
+    button_Attack4.place(relx=.75, rely=.74, anchor=CENTER)
+
     print(f"Your pokemon is {tamer.get_nom_pokemon()}")
+
+def attack1() :
+    global numAtt1
+    numAtt1 -= 1
+    button_Attack1.configure(text=f"{attack1Info[0]} {numAtt1}/{attack1Info[2]}")
+
+    if numAtt1 == 0 :
+        button_Attack1.configure(state="disabled")
+
+    damage = float(attack1Info[1]) * (tamer.get_pokemon().get_attaque() * .01)/3
+    if attack1Info[3] != "n" and attack1Info[5] != "n" :
+        effectOnOther = attack1Info[3]
+        effectOnOther = effectOnOther.split(":")
+        effectOnOther[1] = float(effectOnOther[1])
+        effectOnOther[1] *= (tamer.get_pokemon().get_attaque() * .01)
+        effectOnOther[1] -= .5
+        roundsForEffect = attack1Info[5]
+        client.send(f"$attack:{username},{damage},{effectOnOther[0]}:{effectOnOther[1]},{roundsForEffect}".encode(FORMAT))
+    else :
+        client.send(f"$attack:{username},{damage},n,n".encode(FORMAT))
+
+def attack2() :
+    numAtt2 -= 1
+    button_Attack2.configure(text=f"{attack2Info[0]} {numAtt2}/{attack2Info[2]}")
+    damage = attack2Info[1] * (tamer.get_pokemon().get_attaque() * .01)
+    effectOnOther = attack2Info[3]
+    effectOnOther = effectOnOther.split(":")
+    effectOnOther[1] *= (tamer.get_pokemon().get_attaque() * .01)
+    roundsForEffect = attack2Info[5]
+    client.send(f"$attack:{damage},{effectOnOther[0]}:{effectOnOther[1]},{roundsForEffect}".encode(FORMAT))
+
+def attack3() :
+    numAtt3 -= 1
+    button_Attack3.configure(text=f"{attack3Info[0]} {numAtt3}/{attack3Info[2]}")
+    damage = attack3Info[1] * (tamer.get_pokemon().get_attaque() * .01)
+    effectOnOther = attack3Info[3]
+    effectOnOther = effectOnOther.split(":")
+    effectOnOther[1] *= (tamer.get_pokemon().get_attaque() * .01)
+    roundsForEffect = attack3Info[5]
+    client.send(f"$attack:{damage},{effectOnOther[0]}:{effectOnOther[1]},{roundsForEffect}".encode(FORMAT))
+
+def attack4() :
+    numAtt4 -= 1
+    button_Attack4.configure(text=f"{attack4Info[0]} {numAtt4}/{attack4Info[2]}")
+    damage = attack4Info[1] * (tamer.get_pokemon().get_attaque() * .01)
+    effectOnOther = attack4Info[3]
+    effectOnOther = effectOnOther.split(":")
+    effectOnOther[1] *= (tamer.get_pokemon().get_attaque() * .01)
+    roundsForEffect = attack4Info[5]
+    client.send(f"$attack:{damage},{effectOnOther[0]}:{effectOnOther[1]},{roundsForEffect}".encode(FORMAT))
 
 
 
