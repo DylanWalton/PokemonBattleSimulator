@@ -398,14 +398,16 @@ def client_receive() :
                             takeDamage(message, True)
                         else :
                             takeDamage(message, False)
-
-                if "$health:" in message :
+                elif "$health:" in message :
                     message = message.replace("b'", "")
                     message = message.replace("$health:", "")
                     message = message.split(",")
                     if message[1] == chosenPlayer :
                         oppHealthVis(message[0])
-
+                elif "$death:" in message :
+                    message = message.replace("$death:", "")
+                    if message == chosenPlayer :
+                        winFrame()
             else :
                 textbox_Chat.insert("0.0", message+"\n\n")
         except :
@@ -429,8 +431,6 @@ frame_LobbyFrame = customtkinter.CTkFrame(master=window,
                                               width=window._current_width-20, 
                                               height=window._current_height-20)
 entry_Chat = customtkinter.CTkEntry(master=frame_LobbyFrame, placeholder_text="Message everyone", width=593, height=30)
-colours = ["red", "blue", "green", "yellow", "orange", "pink", "white", "purple"]
-#colours[randint(0, len(colours)-1)]
 textbox_Chat = customtkinter.CTkTextbox(master=frame_LobbyFrame, width=290, height=370, border_color="black", border_width=1, text_color="orange")
 frame_Players = customtkinter.CTkFrame(master=frame_LobbyFrame, width=210, height=370, fg_color="#1A1A1A", border_color="black", border_width=1)
 
@@ -561,7 +561,6 @@ label_Defense = customtkinter.CTkLabel(master=frame_PokemonChoice, text="Defense
 label_Level = customtkinter.CTkLabel(master=frame_PokemonChoice, text="Level : "+str(pikachu.get_niveau())+" / 100", font=(None, 23))
 
 def battle() :
-    global pokemon
 
     frame_LobbyFrame.place(relx=10)
 
@@ -754,19 +753,23 @@ def goToBattle() :
     textbox_Effects = customtkinter.CTkTextbox(master=frame_Battle, width=230, height=70, border_color="black", border_width=1, text_color="white")
     textbox_Effects.place(relx=.2, rely=.1, anchor=CENTER)
 
+damageModifier = 0
+damageLess = 0
+
 def attack1() :
     button_Attack1.configure(state="disabled")
     button_Attack2.configure(state="disabled")
     button_Attack3.configure(state="disabled")
     button_Attack4.configure(state="disabled")
-    global numAtt1
+    global numAtt1, damageLess, damageModifier
     numAtt1 -= 1
     button_Attack1.configure(text=f"{attack1Info[0]} {numAtt1}/{attack1Info[2]}")
 
-    if numAtt1 < 1 :
-        button_Attack1.configure(state="disabled")
-
     damage = int(attack1Info[1]) * (tamer.get_pokemon().get_attaque() * .01)/3
+
+    if damageModifier > 0 :
+        damage -= damageLess
+        damageModifier -= 1
 
     if attack1Info[3] != "n" and attack1Info[5] != "n" :
         effectOnOther = attack1Info[3]
@@ -779,27 +782,31 @@ def attack1() :
     else :
         client.send(f"$attack:{username},{damage},n,n,{attack1Info[0]}".encode(FORMAT))
 
-    textbox_Effects.insert("0.0", f"{tamer.get_nom_pokemon()}(you) used {attack1Info[0]} for {int(damage)} damage!")
+    textbox_Effects.insert("0.0", f"{tamer.get_nom_pokemon()}(you) used {attack1Info[0]} for {int(damage)} damage!\n")
 
     if attack1Info[0] == "Future Sight" :
         dmgName = attack1Info[4].split(":")
-        roundsForEffectLeft.append(int(attack1Info[5]))
-        damagePerRound.append(int(dmgName[1]))
-        effectNames.append(dmgName[0])
-        
+        tamer.get_pokemon().set_degats(int(int(dmgName[1]) * (tamer.get_pokemon().get_attaque() * .01)/3)+1)
+        label_HP.configure(text=f"{str(tamer.get_pokemon().get_pv())}/{maxHp}")
+        progressBar_HP.set(tamer.get_pokemon().get_pv() / maxHp)
+        client.send(f"$health:{tamer.get_pokemon().get_pv()},{username}".encode(FORMAT))
+        textbox_Effects.insert("0.0", f"{dmgName[0]} -> {int(int(dmgName[1]) * (tamer.get_pokemon().get_attaque() * .01)/3)}\n")
+        checkForDeath()
+
 def attack2() :
     button_Attack1.configure(state="disabled")
     button_Attack2.configure(state="disabled")
     button_Attack3.configure(state="disabled")
     button_Attack4.configure(state="disabled")
-    global numAtt2
+    global numAtt2, damageLess, damageModifier
     numAtt2 -= 1
     button_Attack2.configure(text=f"{attack2Info[0]} {numAtt2}/{attack2Info[2]}")
-
-    if numAtt2 < 1 :
-        button_Attack2.configure(state="disabled")
-
     damage = int(attack2Info[1]) * (tamer.get_pokemon().get_attaque() * .01)/3
+
+    if damageModifier > 0 :
+        damage -= damageLess
+        damageModifier -= 1
+    
     if attack2Info[3] != "n" and attack2Info[5] != "n" :
         effectOnOther = attack2Info[3]
         effectOnOther = effectOnOther.split(":")
@@ -811,21 +818,31 @@ def attack2() :
     else :
         client.send(f"$attack:{username},{damage},n,n,{attack2Info[0]}".encode(FORMAT))
 
-    textbox_Effects.insert("0.0", f"{tamer.get_nom_pokemon()}(you) used {attack2Info[0]} for {int(damage)} damage!")
+    textbox_Effects.insert("0.0", f"{tamer.get_nom_pokemon()}(you) used {attack2Info[0]} for {int(damage)} damage!\n")
+
+    if attack2Info[0] == "Outrage" :
+        damageLess = attack2Info[4].split(":")
+        damageLess = int(damageLess[1])
+        damageModifier = int(attack2Info[5])
+        damageLess *= int((tamer.get_pokemon().get_attaque() * .01)/5)
+        damageLess += 2
+        textbox_Effects.insert("0.0", f"{tamer.get_nom_pokemon()} will deal {damageLess} less damage for the next {damageModifier} rounds\n")
 
 def attack3() :
     button_Attack1.configure(state="disabled")
     button_Attack2.configure(state="disabled")
     button_Attack3.configure(state="disabled")
     button_Attack4.configure(state="disabled")
-    global numAtt3
+    global numAtt3, damageLess, damageModifier
     numAtt3 -= 1
     button_Attack3.configure(text=f"{attack3Info[0]} {numAtt3}/{attack3Info[2]}")
 
-    if numAtt3 < 1 :
-        button_Attack3.configure(state="disabled")
-
     damage = int(attack3Info[1]) * (tamer.get_pokemon().get_attaque() * .01)/3
+
+    if damageModifier > 0 :
+        damage -= damageLess
+        damageModifier -= 1
+
     if attack3Info[3] != "n" and attack3Info[5] != "n" :
         effectOnOther = attack3Info[3]
         effectOnOther = effectOnOther.split(":")
@@ -837,21 +854,23 @@ def attack3() :
     else :
         client.send(f"$attack:{username},{damage},n,n,{attack3Info[0]}".encode(FORMAT))
 
-    textbox_Effects.insert("0.0", f"{tamer.get_nom_pokemon()}(you) used {attack3Info[0]} for {int(damage)} damage!")
+    textbox_Effects.insert("0.0", f"{tamer.get_nom_pokemon()}(you) used {attack3Info[0]} for {int(damage)} damage!\n")
 
 def attack4() :
     button_Attack1.configure(state="disabled")
     button_Attack2.configure(state="disabled")
     button_Attack3.configure(state="disabled")
     button_Attack4.configure(state="disabled")
-    global numAtt4
+    global numAtt4, damageLess, damageModifier
     numAtt4 -= 1
     button_Attack4.configure(text=f"{attack4Info[0]} {numAtt4}/{attack4Info[2]}")
 
-    if numAtt4 < 1 :
-        button_Attack4.configure(state="disabled")
-
     damage = int(attack4Info[1]) * (tamer.get_pokemon().get_attaque() * .01)/3
+
+    if damageModifier > 0 :
+        damage -= damageLess
+        damageModifier -= 1
+
     if attack4Info[3] != "n" and attack4Info[5] != "n" :
         effectOnOther = attack4Info[3]
         effectOnOther = effectOnOther.split(":")
@@ -863,35 +882,52 @@ def attack4() :
     else :
         client.send(f"$attack:{username},{damage},n,n,{attack4Info[0]}".encode(FORMAT))
 
-    textbox_Effects.insert("0.0", f"{tamer.get_nom_pokemon()}(you) used {attack4Info[0]} for {int(damage)} damage!")
+    textbox_Effects.insert("0.0", f"{tamer.get_nom_pokemon()}(you) used {attack4Info[0]} for {int(damage)} damage!\n")
 
     if attack4Info[0] == "Extincteur" :
         if "Fire" in effectNames :
             popThisEffect = effectNames.index("Fire")
             effectNames.pop(popThisEffect)
-            roundsForEffect.pop(popThisEffect)
+            roundsForEffectLeft.pop(popThisEffect)
             damagePerRound.pop(popThisEffect)
+    elif attack4Info[0] == "Lobotomisation" :
+        dmgName = attack4Info[4].split(":")
+        tamer.get_pokemon().set_degats(int(int(dmgName[1]) * (tamer.get_pokemon().get_attaque() * .01)/3))
+        label_HP.configure(text=f"{str(tamer.get_pokemon().get_pv())}/{maxHp}")
+        progressBar_HP.set(tamer.get_pokemon().get_pv() / maxHp)
+        client.send(f"$health:{tamer.get_pokemon().get_pv()},{username}".encode(FORMAT))
+        textbox_Effects.insert("0.0", f"{dmgName[0]} -> {dmgName[1]}\n")
+        checkForDeath()
 
 def takeDamage(message, effect : bool) :
-    button_Attack1.configure(state="normal")
-    button_Attack2.configure(state="normal")
-    button_Attack3.configure(state="normal")
-    button_Attack4.configure(state="normal")
+    global numAtt1, numAtt2, numAtt3, numAtt4
+
+    if numAtt1 >= 1 :
+        button_Attack1.configure(state="normal")
+    if numAtt2 >= 1 :
+        button_Attack2.configure(state="normal")
+    if numAtt3 >= 1 :
+        button_Attack3.configure(state="normal")
+    if numAtt4 >= 1 :
+        button_Attack4.configure(state="normal")
     damage = int(float(message[1]))
     damage -= int(tamer.get_pokemon().get_defense() * .01)
     tamer.get_pokemon().set_degats(damage)
     label_HP.configure(text=f"{str(tamer.get_pokemon().get_pv())}/{maxHp}")
     progressBar_HP.set(tamer.get_pokemon().get_pv() / maxHp)
     client.send(f"$health:{tamer.get_pokemon().get_pv()},{username}".encode(FORMAT))
-    textbox_Effects.insert("0.0", f"{opponentPokemon} used {message[5]} for {damage}!")
+    textbox_Effects.insert("0.0", f"{opponentPokemon} used {message[4]} for {damage} damage!\n")
 
     if effect :
         print(message)
         message[2] = message[2].split(":")
-        print(message)
+        print(message[2])
         roundsForEffectLeft.append(int(message[3]))
         print(roundsForEffectLeft)
-        damagePerRound.append(int(message[2][1]))
+        message[2][1] = int(float(message[2][1]))
+        if message[2][1] < 1 :
+            message[2][1] = 1
+        damagePerRound.append(message[2][1])
         print(damagePerRound)
         effectNames.append(message[2][0])
         print(effectNames)
@@ -910,10 +946,100 @@ def takeDamage(message, effect : bool) :
             damagePerRound.pop(effect)
             effectNames.pop(effect)
 
+    checkForDeath()
 
+def checkForDeath() :
     if tamer.get_pokemon().get_pv() == 0 :
-        # end the battle
-        print("Death!")
+        client.send(f"$death:{username}".encode(FORMAT))
+        lossFrame()
+        
+def lossFrame() :
+    frame_Battle.place(relx=30)
+
+    global frame_GameOver
+    frame_GameOver = customtkinter.CTkFrame(master=window, width=window._current_width-20, height=window._current_height-20)
+    label_GameOver = customtkinter.CTkLabel(master=frame_GameOver, text="Game Over!", font=(None, 30))
+    label_Loss = customtkinter.CTkLabel(master=frame_GameOver, text="You Lose", font=(None, 23), text_color="orange")
+    label_XP = customtkinter.CTkLabel(master=frame_GameOver, text=f"{tamer.get_nom_pokemon()} earned 0 levels, better luck next time", font=(None, 20))
+    button_Continue = customtkinter.CTkButton(master=frame_GameOver, text="Continue", command=backToLobby)
+    frame_GameOver.place(relx=.5, rely=.5, anchor=CENTER)
+    label_GameOver.place(relx=.5, rely=.2, anchor=CENTER)
+    label_Loss.place(relx=.5, rely=.4, anchor=CENTER)
+    label_XP.place(relx=.5, rely=.6, anchor=CENTER)
+    button_Continue.place(relx=.5, rely=.8, anchor=CENTER)
+
+    print("Loss")
+
+def winFrame() :
+    frame_Battle.place(relx=30)
+
+    global frame_GameOver
+    frame_GameOver = customtkinter.CTkFrame(master=window, width=window._current_width-20, height=window._current_height-20)
+    label_GameOver = customtkinter.CTkLabel(master=frame_GameOver, text="Game Over!", font=(None, 30))
+    label_Win = customtkinter.CTkLabel(master=frame_GameOver, text="You Win!", font=(None, 23), text_color="green")
+    if tamer.get_pokemon().get_niveau() != 100 :
+        label_XP = customtkinter.CTkLabel(master=frame_GameOver, text=f"{tamer.get_nom_pokemon()} earned 1 level, well done!", font=(None, 20))
+    else :
+        label_XP = customtkinter.CTkLabel(master=frame_GameOver, text=f"{tamer.get_nom_pokemon()} has already reached the maximum level, but still, well done!", font=(None, 20))
+
+    content = None
+
+    with open(f"{pokMetaLoc}pokemonMetaData.txt", "r") as file :
+        content = file.readlines()
+
+    print(content)
+    print(tamer.get_nom_pokemon())
+
+    for i in range(len(content)) :
+        print(content[i])
+        if f"{tamer.get_nom_pokemon()}" in content[i] :
+            content[i] = content[i].split(",")
+            content[i][-1] = str(int(content[i][-1])+1)
+            thingToChange = ""
+            for item in content[i] :
+                thingToChange += "," + item
+            thingToChange = thingToChange[1:]
+            thingToChange += "\n"
+            content[i] = thingToChange
+            break
+
+    with open(f"{pokMetaLoc}pokemonMetaData.txt", "w") as file :
+        file.writelines(content)
+
+    button_Continue = customtkinter.CTkButton(master=frame_GameOver, text="Continue", command=backToLobby)
+    frame_GameOver.place(relx=.5, rely=.5, anchor=CENTER)
+    label_GameOver.place(relx=.5, rely=.2, anchor=CENTER)
+    label_Win.place(relx=.5, rely=.4, anchor=CENTER)
+    label_XP.place(relx=.5, rely=.6, anchor=CENTER)
+    button_Continue.place(relx=.5, rely=.8, anchor=CENTER)
+
+def backToLobby() :
+    # set EVERYTHING back to how it was at lobby level
+    global chosenPlayer, chosenPokemon, opponentLvl, opponentHP, damageLess, damageModifier, roundsForEffectLeft, damagePerRound,\
+           effectNames, playerLabels, optionMenu_Players, poppedPlayer, inviteDenied, inviterName, tamer, opponentIsReady, opponentPokemon
+    chosenPokemon = pikachu
+    damageModifier = 0
+    damageLess = 0
+    opponentLvl = None
+    opponentHP = None  
+    roundsForEffectLeft = []
+    damagePerRound = []
+    effectNames = []
+    playerLabels = []
+    chosenPlayer = None
+    optionMenu_Players = None
+    poppedPlayer = None
+    inviteDenied = True
+    inviterName = None
+    choosePokemon("Pikachu")
+    opponentPokemon = None
+    opponentIsReady = False
+    tamer = None
+
+    frame_Battle.destroy()
+    frame_GameOver.destroy()
+    displayPlayers()
+    lobby()
 
 def oppHealthVis(health) :
     label_OppHP.configure(text=f"{health}/{opponentHP}")
@@ -927,7 +1053,7 @@ opponentIsReady = False
 tamer = None
 
 def waitForOpponent() :
-    global tamer
+    global tamer, opponentIsReady
     tamer = c_dresseur.Dresseur(username, chosenPokemon)
     client.send(f"!ready:{tamer.get_nom_pokemon()},{tamer.get_nom_dresseur()},{tamer.get_pokemon().get_niveau()},{tamer.get_pokemon().get_pv()}".encode(FORMAT))
     frame_PokemonChoice.place(relx=-10)
@@ -945,7 +1071,6 @@ for i in pokemon :
     pokemonNames.append(i[0])
 optionMenu_Pokemon = customtkinter.CTkOptionMenu(master=frame_PokemonChoice, values=pokemonNames, command=choosePokemon)
 #endregion
-
 
 #region Threads
 receive_Process = threading.Thread(target=client_receive)
