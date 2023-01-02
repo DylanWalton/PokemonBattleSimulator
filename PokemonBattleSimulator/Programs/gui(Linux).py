@@ -537,33 +537,29 @@ for i in range(len(pokemon)) :
 for i in range(len(pokemon)) :
     pokemon[i] = pokemon[i].split(",")
 
-def pokemonMaker() :
-    global pikachu, charizard, lucario, mewtwo, suicune, rayquaza, frame_PokemonChoice, image_Pikachu, image_Charizard, image_Lucario, image_Mewtwo, image_Suicune, image_Rayquaza,\
-           button_PokemonImage1, label_Attaque, label_Defense, label_Pv, label_Level, label_Name
-    pikachu = c_pokemon.Pokemon(pokemon[0][0], int(pokemon[0][1]), int(pokemon[0][2]), int(pokemon[0][3]), int(pokemon[0][4]))
-    charizard = c_pokemon.Pokemon(pokemon[1][0], int(pokemon[1][1]), int(pokemon[1][2]), int(pokemon[1][3]), int(pokemon[1][4]))
-    lucario = c_pokemon.Pokemon(pokemon[2][0], int(pokemon[2][1]), int(pokemon[2][2]), int(pokemon[2][3]), int(pokemon[2][4]))
-    mewtwo = c_pokemon.Pokemon(pokemon[3][0], int(pokemon[3][1]), int(pokemon[3][2]), int(pokemon[3][3]), int(pokemon[3][4]))
-    suicune = c_pokemon.Pokemon(pokemon[4][0], int(pokemon[4][1]), int(pokemon[4][2]), int(pokemon[4][3]), int(pokemon[4][4]))
-    rayquaza = c_pokemon.Pokemon(pokemon[5][0], int(pokemon[5][1]), int(pokemon[5][2]), int(pokemon[5][3]), int(pokemon[5][4]))
 
-    frame_PokemonChoice = customtkinter.CTkFrame(master=window, width=window._current_width-20, height=window._current_height-20)
+pikachu = c_pokemon.Pokemon(pokemon[0][0], int(pokemon[0][1]), int(pokemon[0][2]), int(pokemon[0][3]), int(pokemon[0][4]))
+charizard = c_pokemon.Pokemon(pokemon[1][0], int(pokemon[1][1]), int(pokemon[1][2]), int(pokemon[1][3]), int(pokemon[1][4]))
+lucario = c_pokemon.Pokemon(pokemon[2][0], int(pokemon[2][1]), int(pokemon[2][2]), int(pokemon[2][3]), int(pokemon[2][4]))
+mewtwo = c_pokemon.Pokemon(pokemon[3][0], int(pokemon[3][1]), int(pokemon[3][2]), int(pokemon[3][3]), int(pokemon[3][4]))
+suicune = c_pokemon.Pokemon(pokemon[4][0], int(pokemon[4][1]), int(pokemon[4][2]), int(pokemon[4][3]), int(pokemon[4][4]))
+rayquaza = c_pokemon.Pokemon(pokemon[5][0], int(pokemon[5][1]), int(pokemon[5][2]), int(pokemon[5][3]), int(pokemon[5][4]))
 
-    image_Pikachu = customtkinter.CTkImage(Image.open(f"{pokImagesLoc}Pikachu.png"), size=(270,250))
-    image_Charizard = customtkinter.CTkImage(Image.open(f"{pokImagesLoc}Charizard.png"), size=(300,230))
-    image_Lucario = customtkinter.CTkImage(Image.open(f"{pokImagesLoc}Lucario.png"), size=(160, 280))
-    image_Mewtwo = customtkinter.CTkImage(Image.open(f"{pokImagesLoc}Mewtwo.png"), size=(250, 280))
-    image_Suicune = customtkinter.CTkImage(Image.open(f"{pokImagesLoc}Suicune.png"), size=(290, 260))
-    image_Rayquaza = customtkinter.CTkImage(Image.open(f"{pokImagesLoc}Rayquaza.png"), size=(250, 280))
+frame_PokemonChoice = customtkinter.CTkFrame(master=window, width=window._current_width-20, height=window._current_height-20)
 
-    button_PokemonImage1 = customtkinter.CTkButton(master=frame_PokemonChoice, text="", image=image_Pikachu, width=430, height=400, fg_color="#222222", hover=False)
-    label_Name = customtkinter.CTkLabel(master=frame_PokemonChoice, text=pikachu.get_nom(), font=(None, 25))
-    label_Pv = customtkinter.CTkLabel(master=frame_PokemonChoice, text="Pv : "+str(pikachu.get_pv()), font=(None, 23))
-    label_Attaque = customtkinter.CTkLabel(master=frame_PokemonChoice, text="Attaque : "+str(pikachu.get_attaque()), font=(None, 23))
-    label_Defense = customtkinter.CTkLabel(master=frame_PokemonChoice, text="Defense : "+str(pikachu.get_defense()), font=(None, 23))
-    label_Level = customtkinter.CTkLabel(master=frame_PokemonChoice, text="Level : "+str(pikachu.get_niveau())+" / 100", font=(None, 23))
+image_Pikachu = customtkinter.CTkImage(Image.open(f"{pokImagesLoc}Pikachu.png"), size=(270,250))
+image_Charizard = customtkinter.CTkImage(Image.open(f"{pokImagesLoc}Charizard.png"), size=(300,230))
+image_Lucario = customtkinter.CTkImage(Image.open(f"{pokImagesLoc}Lucario.png"), size=(160, 280))
+image_Mewtwo = customtkinter.CTkImage(Image.open(f"{pokImagesLoc}Mewtwo.png"), size=(250, 280))
+image_Suicune = customtkinter.CTkImage(Image.open(f"{pokImagesLoc}Suicune.png"), size=(290, 260))
+image_Rayquaza = customtkinter.CTkImage(Image.open(f"{pokImagesLoc}Rayquaza.png"), size=(250, 280))
 
-pokemonMaker()
+button_PokemonImage1 = customtkinter.CTkButton(master=frame_PokemonChoice, text="", image=image_Pikachu, width=430, height=400, fg_color="#222222", hover=False)
+label_Name = customtkinter.CTkLabel(master=frame_PokemonChoice, text=pikachu.get_nom(), font=(None, 25))
+label_Pv = customtkinter.CTkLabel(master=frame_PokemonChoice, text="Pv : "+str(pikachu.get_pv()), font=(None, 23))
+label_Attaque = customtkinter.CTkLabel(master=frame_PokemonChoice, text="Attaque : "+str(pikachu.get_attaque()), font=(None, 23))
+label_Defense = customtkinter.CTkLabel(master=frame_PokemonChoice, text="Defense : "+str(pikachu.get_defense()), font=(None, 23))
+label_Level = customtkinter.CTkLabel(master=frame_PokemonChoice, text="Level : "+str(pikachu.get_niveau())+" / 100", font=(None, 23))
 #endregion
 
 def battle() :
@@ -1022,7 +1018,6 @@ def backToLobby() :
     # set EVERYTHING back to how it was at lobby level
     global chosenPlayer, chosenPokemon, opponentLvl, opponentHP, damageLess, damageModifier, roundsForEffectLeft, damagePerRound,\
            effectNames, playerLabels, optionMenu_Players, poppedPlayer, inviteDenied, inviterName, tamer, opponentIsReady, opponentPokemon
-    chosenPokemon = pikachu
     damageModifier = 0
     damageLess = 0
     opponentLvl = None
@@ -1037,12 +1032,16 @@ def backToLobby() :
     inviteDenied = True
     inviterName = None
     optionMenu_Pokemon.set("Pikachu")
-    choosePokemon("Pikachu")
     opponentPokemon = None
     opponentIsReady = False
+    for i in range(len(pokemon)) :
+        if f"{tamer.get_nom_pokemon()}" in pokemon[i][0] :
+            tamer.get_pokemon().set_pv(pokemon[i][1])
+            break
+    chosenPokemon = pikachu
     tamer = None
-    pokemonMaker()
-
+    choosePokemon("Pikachu")
+    
     frame_Battle.destroy()
     frame_GameOver.destroy()
     displayPlayers()
