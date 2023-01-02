@@ -405,7 +405,8 @@ def client_receive() :
                     message = message.split(",")
                     if message[1] == chosenPlayer :
                         oppHealthVis(message[0])
-                elif "$death:" in message :
+                if "$death:" in message :
+                    message = message.replace("b'", "")
                     message = message.replace("$death:", "")
                     if message == chosenPlayer :
                         winFrame()
@@ -741,10 +742,10 @@ def goToBattle() :
     label_Lvl.place(relx=.6, rely=.8, anchor=CENTER)
 
     frame_Attacks = customtkinter.CTkFrame(master=frame_Battle, width=300, height=80, border_width=1, border_color="#00b3e5", fg_color="#282d3f")
-    button_Attack1 = customtkinter.CTkButton(master=frame_Attacks, command=attack1, text=f"{attack1Info[0]} {attack1Info[2]}/{attack1Info[2]}", border_width=1, border_color="black", height=35, font=(None,14))
-    button_Attack2 = customtkinter.CTkButton(master=frame_Attacks, command=attack2, text=f"{attack2Info[0]} {attack2Info[2]}/{attack2Info[2]}", border_width=1, border_color="black", height=35, font=(None,14))
-    button_Attack3 = customtkinter.CTkButton(master=frame_Attacks, command=attack3, text=f"{attack3Info[0]} {attack3Info[2]}/{attack3Info[2]}", border_width=1, border_color="black", height=35, font=(None,14))
-    button_Attack4 = customtkinter.CTkButton(master=frame_Attacks, command=attack4, text_color="yellow", text=f"{attack4Info[0]} {attack4Info[2]}/{attack4Info[2]}", border_width=1, border_color="black", height=35, font=(None,14))
+    button_Attack1 = customtkinter.CTkButton(master=frame_Attacks, command=attack1, text=f"{attack1Info[0]} {attack1Info[2]}/{attack1Info[2]}", border_width=1, border_color="black", height=35, font=(None,13))
+    button_Attack2 = customtkinter.CTkButton(master=frame_Attacks, command=attack2, text=f"{attack2Info[0]} {attack2Info[2]}/{attack2Info[2]}", border_width=1, border_color="black", height=35, font=(None,13))
+    button_Attack3 = customtkinter.CTkButton(master=frame_Attacks, command=attack3, text=f"{attack3Info[0]} {attack3Info[2]}/{attack3Info[2]}", border_width=1, border_color="black", height=35, font=(None,13))
+    button_Attack4 = customtkinter.CTkButton(master=frame_Attacks, command=attack4, text_color="yellow", text=f"{attack4Info[0]} {attack4Info[2]}/{attack4Info[2]}", border_width=1, border_color="black", height=35, font=(None,13))
     frame_Attacks.place(relx=.7, rely=.9, anchor=CENTER)
     button_Attack1.place(relx=.25, rely=.26, anchor=CENTER)
     button_Attack2.place(relx=.75, rely=.26, anchor=CENTER)
@@ -793,6 +794,7 @@ def attack1() :
         client.send(f"$health:{tamer.get_pokemon().get_pv()},{username}".encode(FORMAT))
         textbox_Effects.insert("0.0", f"{dmgName[0]} -> {int(int(dmgName[1]) * (tamer.get_pokemon().get_attaque() * .01)/3)}\n")
         checkForDeath()
+    checkForWin()
 
 def attack2() :
     button_Attack1.configure(state="disabled")
@@ -828,6 +830,7 @@ def attack2() :
         damageLess *= int((tamer.get_pokemon().get_attaque() * .01)/5)
         damageLess += 2
         textbox_Effects.insert("0.0", f"{tamer.get_nom_pokemon()} will deal {damageLess} less damage for the next {damageModifier} rounds\n")
+    checkForWin()
 
 def attack3() :
     button_Attack1.configure(state="disabled")
@@ -856,6 +859,7 @@ def attack3() :
         client.send(f"$attack:{username},{damage},n,n,{attack3Info[0]}".encode(FORMAT))
 
     textbox_Effects.insert("0.0", f"{tamer.get_nom_pokemon()}(you) used {attack3Info[0]} for {int(damage)} damage!\n")
+    checkForWin()
 
 def attack4() :
     button_Attack1.configure(state="disabled")
@@ -899,6 +903,8 @@ def attack4() :
         client.send(f"$health:{tamer.get_pokemon().get_pv()},{username}".encode(FORMAT))
         textbox_Effects.insert("0.0", f"{dmgName[0]} -> {dmgName[1]}\n")
         checkForDeath()
+    
+    checkForWin()
 
 def takeDamage(message, effect : bool) :
     global numAtt1, numAtt2, numAtt3, numAtt4
@@ -953,6 +959,10 @@ def checkForDeath() :
     if tamer.get_pokemon().get_pv() == 0 :
         client.send(f"$death:{username}".encode(FORMAT))
         lossFrame()
+
+def checkForWin() :
+    if progressBar_OppHP.get() == 0 :
+        winFrame()
         
 def lossFrame() :
     frame_Battle.place(relx=30)
@@ -968,8 +978,6 @@ def lossFrame() :
     label_Loss.place(relx=.5, rely=.4, anchor=CENTER)
     label_XP.place(relx=.5, rely=.6, anchor=CENTER)
     button_Continue.place(relx=.5, rely=.8, anchor=CENTER)
-
-    print("Loss")
 
 def winFrame() :
     frame_Battle.place(relx=30)
