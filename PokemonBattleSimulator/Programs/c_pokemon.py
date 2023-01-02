@@ -37,6 +37,10 @@ class Pokemon :
         """ Retourne le niveau du pokemon. """
         return self.__niveau
 
+    def set_pv(self, pv) :
+        pv = int(pv)
+        self.__pv = int(((2*pv+16+21)*self.get_niveau())/100)+self.get_niveau()+10
+
     def get_loboNum(self) :
         """ Retourne le nombre de fois restant dont le pokemon peut effectuer l'attaque speciale 'lobotimisation'. """
         return self.__loboNum
