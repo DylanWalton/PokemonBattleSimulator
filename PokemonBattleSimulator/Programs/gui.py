@@ -333,6 +333,7 @@ def client_connect(ip : str, port : int) :
 def client_receive() :
     while True :
         try :
+            global client
             message = client.recv(1024).decode(FORMAT)
             if message == "alias?" :
                 client.send(username.encode(FORMAT))
@@ -649,12 +650,11 @@ def choosePokemon(pokName) :
 
 #region Battle for real
 
-frame_Battle = customtkinter.CTkFrame(master=window, width=window._current_width-20, height=window._current_height-20)
+
 opponentLvl = None
 opponentHP = None
 
 def goToBattle() :
-
     label_Loading.destroy()
     progressBar.destroy()
 
@@ -1031,6 +1031,7 @@ def backToLobby() :
     poppedPlayer = None
     inviteDenied = True
     inviterName = None
+    optionMenu_Pokemon.set("Pikachu")
     choosePokemon("Pikachu")
     opponentPokemon = None
     opponentIsReady = False
@@ -1045,15 +1046,15 @@ def oppHealthVis(health) :
     label_OppHP.configure(text=f"{health}/{opponentHP}")
     progressBar_OppHP.set(int(health) / opponentHP)
 
-label_Loading = customtkinter.CTkLabel(master=frame_Battle, text="Waiting for opponent", text_color="white", font=(None, 31))
-progressBar = customtkinter.CTkProgressBar(master=frame_Battle, width=300, height=15, progress_color="yellow", mode="indeterminate", indeterminate_speed=1)
-
 opponentPokemon = None
 opponentIsReady = False
 tamer = None
 
 def waitForOpponent() :
-    global tamer, opponentIsReady
+    global tamer, opponentIsReady, frame_Battle, label_Loading, progressBar, frame_Battle
+    frame_Battle = customtkinter.CTkFrame(master=window, width=window._current_width-20, height=window._current_height-20)
+    label_Loading = customtkinter.CTkLabel(master=frame_Battle, text="Waiting for opponent", text_color="white", font=(None, 31))
+    progressBar = customtkinter.CTkProgressBar(master=frame_Battle, width=300, height=15, progress_color="yellow", mode="indeterminate", indeterminate_speed=1)
     tamer = c_dresseur.Dresseur(username, chosenPokemon)
     client.send(f"!ready:{tamer.get_nom_pokemon()},{tamer.get_nom_dresseur()},{tamer.get_pokemon().get_niveau()},{tamer.get_pokemon().get_pv()}".encode(FORMAT))
     frame_PokemonChoice.place(relx=-10)
